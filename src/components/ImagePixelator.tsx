@@ -10,11 +10,13 @@ interface Props {
   onUpdatePixelSize?: (size: number) => void;
   currentRow?: number | null;
   onUpdateCurrentRow?: (row: number | null) => void;
+  markedPixel?: { x: number, y: number } | null;
+  onUpdateMarkedPixel?: (pixel: { x: number, y: number } | null) => void;
   isFocusMode?: boolean;
   onToggleFocus?: () => void;
 }
 
-export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, currentRow = null, onUpdateCurrentRow, isFocusMode = false, onToggleFocus }: Props) {
+export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, currentRow = null, onUpdateCurrentRow, markedPixel = null, onUpdateMarkedPixel, isFocusMode = false, onToggleFocus }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [pixelSize, setPixelSize] = useState(initialPixelSize);
@@ -52,9 +54,9 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
 
   useEffect(() => {
     if (originalImage) {
-      drawPixelated(originalImage, pixelSize, currentRow ?? null);
+      drawPixelated(originalImage, pixelSize, currentRow ?? null, markedPixel ?? null);
     }
-  }, [currentRow]);
+  }, [currentRow, markedPixel]);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -104,7 +106,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     };
   }, []);
 
-  const drawPixelated = (img: HTMLImageElement, pointsWide: number, rowToHighlight: number | null = null) => {
+  const drawPixelated = (img: HTMLImageElement, pointsWide: number, rowToHighlight: number | null = null, pixelToMark: {x: number, y: number} | null = null) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -156,27 +158,48 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
        // Draw it back scaled up to the main canvas
        ctx.drawImage(offscreen, 0, 0, pointsWide, pointsHigh, 0, 0, canvas.width, canvas.height);
        
-       // Draw dynamic grid on top based on image brightness
-       ctx.strokeStyle = isLightImage ? 'rgba(0, 0, 0, 0.35)' : 'rgba(255, 255, 255, 0.5)';
-       
        // Calculate a line width that survives CSS downscaling (assuming display width ~800px)
        const scaleRatio = canvas.width / 800;
-       ctx.lineWidth = Math.max(1.5, scaleRatio * 1.5);
        
+       // Draw grid
        ctx.beginPath();
+       ctx.strokeStyle = isLightImage ? 'rgba(0, 0, 0, 0.35)' : 'rgba(255, 255, 255, 0.5)';
+       ctx.lineWidth = Math.max(0.5, scaleRatio * 0.5);
        
-       for (let x = 0; x <= pointsWide; x++) {
-         const lineX = Math.round(x * rectWidth);
-         ctx.moveTo(lineX, 0);
-         ctx.lineTo(lineX, canvas.height);
+       for (let x = 0; x <= canvas.width; x += rectWidth) {
+         ctx.moveTo(x, 0);
+         ctx.lineTo(x, canvas.height);
        }
-       for (let y = 0; y <= pointsHigh; y++) {
-         const lineY = Math.round(y * rectHeight);
-         ctx.moveTo(0, lineY);
-         ctx.lineTo(canvas.width, lineY);
+       for (let y = 0; y <= canvas.height; y += rectHeight) {
+         ctx.moveTo(0, y);
+         ctx.lineTo(canvas.width, y);
        }
        
        ctx.stroke();
+       
+       // Draw Indices (1 to N for each row) ONLY in Knitting Mode
+       if (rowToHighlight != null) {
+         ctx.textAlign = 'right';
+         ctx.textBaseline = 'bottom';
+         const fontSize = Math.max(6, rectHeight * 0.25);
+         ctx.font = `600 ${fontSize}px sans-serif`;
+         
+         for (let y = 0; y < pointsHigh; y++) {
+           for (let x = 0; x < pointsWide; x++) {
+             const i = (y * pointsWide + x) * 4;
+             const r = imgData.data[i];
+             const g = imgData.data[i+1];
+             const b = imgData.data[i+2];
+             
+             const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+             ctx.fillStyle = luminance > 140 ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)';
+             
+             const paddingX = Math.max(2, rectWidth * 0.06);
+             const paddingY = Math.max(2, rectHeight * 0.06);
+             ctx.fillText(`${x + 1}`, (x + 1) * rectWidth - paddingX, (y + 1) * rectHeight - paddingY);
+           }
+         }
+       }
        
        // Draw Row Highlight for Knitting Mode
        if (rowToHighlight != null && rowToHighlight >= 0 && rowToHighlight < pointsHigh) {
@@ -196,6 +219,26 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
          ctx.lineWidth = Math.max(3, scaleRatio * 3);
          ctx.strokeRect(0, rowToHighlight * rectHeight, canvas.width, rectHeight);
        }
+       
+       // Draw Marked Pixel
+       if (pixelToMark && rowToHighlight != null) {
+         const { x, y } = pixelToMark;
+         if (x >= 0 && x < pointsWide && y >= 0 && y < pointsHigh) {
+           const pxX = x * rectWidth;
+           const pxY = y * rectHeight;
+           
+           ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+           ctx.fillRect(pxX, pxY, rectWidth, rectHeight);
+           
+           ctx.strokeStyle = '#FF0000'; // Bright red ring
+           ctx.lineWidth = Math.max(2, scaleRatio * 2);
+           ctx.beginPath();
+           ctx.arc(pxX + rectWidth/2, pxY + rectHeight/2, Math.min(rectWidth, rectHeight) / 4, 0, Math.PI * 2);
+           ctx.stroke();
+           ctx.fillStyle = '#FF0000';
+           ctx.fill();
+         }
+       }
     }
     
     // Update displayed dimensions
@@ -206,7 +249,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     const newSize = parseInt(e.target.value, 10);
     setPixelSize(newSize);
     if (originalImage) {
-      drawPixelated(originalImage, newSize, currentRow ?? null);
+      drawPixelated(originalImage, newSize, currentRow ?? null, markedPixel ?? null);
     }
   };
 
@@ -292,6 +335,26 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
   const handleCanvasClick = (e: React.MouseEvent) => {
     // Only register click for palette on left click
     if (e.button !== 0) return;
+    
+    if (currentRow != null) {
+      // Knitting Mode: Mark Pixel
+      if (!pixelDataRef.current || !canvasRef.current) return;
+      const rect = canvasRef.current.getBoundingClientRect();
+      const scaleX = canvasRef.current.width / rect.width;
+      const scaleY = canvasRef.current.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+      
+      const gridX = Math.floor(x / pixelDataRef.current.rectWidth);
+      const gridY = Math.floor(y / pixelDataRef.current.rectHeight);
+      
+      if (markedPixel && markedPixel.x === gridX && markedPixel.y === gridY) {
+        onUpdateMarkedPixel?.(null);
+      } else {
+        onUpdateMarkedPixel?.({ x: gridX, y: gridY });
+      }
+      return; // Do not save color in knitting mode
+    }
     
     if (hoverColor) {
       if (!palette.find(c => c.hex === hoverColor.hex)) {

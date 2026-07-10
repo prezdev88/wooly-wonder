@@ -210,6 +210,22 @@ function App() {
     setActiveImage(updatedImage);
   };
 
+  const handleUpdateMarkedPixel = (pixel: { x: number, y: number } | null) => {
+    if (!activeProject || !activeImage) return;
+    
+    const updatedImage = { ...activeImage, markedPixel: pixel };
+    const updatedImages = activeProject.images.map(img => 
+      img.id === activeImage.id ? updatedImage : img
+    );
+    const updatedProject = { ...activeProject, images: updatedImages };
+    
+    setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
+    if (window.electronAPI) {
+      window.electronAPI.saveProject(updatedProject);
+    }
+    setActiveImage(updatedImage);
+  };
+
   return (
     <>
       {!isFocusMode && (
@@ -381,6 +397,8 @@ function App() {
                 onUpdatePixelSize={handleUpdatePixelSize}
                 currentRow={activeImage.currentRow}
                 onUpdateCurrentRow={handleUpdateCurrentRow}
+                markedPixel={activeImage.markedPixel}
+                onUpdateMarkedPixel={handleUpdateMarkedPixel}
                 isFocusMode={isFocusMode}
                 onToggleFocus={() => setIsFocusMode(!isFocusMode)}
               />

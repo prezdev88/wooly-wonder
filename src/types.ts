@@ -5,6 +5,7 @@ export interface ProjectImage {
   palette?: SavedColor[];
   pixelSize?: number;
   currentRow?: number | null;
+  markedPixel?: { x: number, y: number } | null;
 }
 
 export interface SavedColor {
