@@ -3,7 +3,17 @@ import ImagePixelator from './components/ImagePixelator'
 import type { Project, ProjectImage, SavedColor } from './types'
 import './index.css'
 
+const THEMES = [
+  { id: 'purple', name: 'Morado Real', accent: '#9D4EDD', hover: '#C77DFF' },
+  { id: 'orange', name: 'Terracota', accent: '#E07A5F', hover: '#F4A261' },
+  { id: 'green', name: 'Bosque', accent: '#2A9D8F', hover: '#45B8AA' },
+  { id: 'blue', name: 'Océano', accent: '#3A86FF', hover: '#6BA2FF' },
+  { id: 'pink', name: 'Chicle', accent: '#FF006E', hover: '#FF4D99' },
+];
+
 function App() {
+  const [themeId, setThemeId] = useState(localStorage.getItem('themeId') || 'purple');
+  const [showSettings, setShowSettings] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState<ProjectImage | null>(null);
@@ -15,6 +25,13 @@ function App() {
       window.electronAPI.getProjects().then(setProjects);
     }
   }, []);
+
+  useEffect(() => {
+    const theme = THEMES.find(t => t.id === themeId) || THEMES[0];
+    document.documentElement.style.setProperty('--accent', theme.accent);
+    document.documentElement.style.setProperty('--accent-hover', theme.hover);
+    localStorage.setItem('themeId', themeId);
+  }, [themeId]);
 
   const activeProject = projects.find(p => p.id === activeProjectId) || null;
 
@@ -158,8 +175,78 @@ function App() {
     <>
       <header className="app-header">
         <h1>Wooly Wonder 🧶</h1>
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', WebkitAppRegion: 'no-drag' as any }}>
+        <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', WebkitAppRegion: 'no-drag' as any, flex: 1, textAlign: 'center' }}>
           {activeProject ? activeProject.name : 'Mis Patrones'}
+        </div>
+        <div style={{ WebkitAppRegion: 'no-drag' as any, position: 'relative' }}>
+          <button 
+            onClick={() => setShowSettings(!showSettings)}
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer', fontSize: '1.4rem', padding: '0 8px' }}
+            title="Preferencias"
+          >
+            🎨
+          </button>
+          
+          {showSettings && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              right: 0,
+              marginTop: '16px',
+              background: 'var(--panel-bg)',
+              border: '1px solid var(--panel-border)',
+              borderRadius: '12px',
+              padding: '16px',
+              backdropFilter: 'blur(30px)',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.8)',
+              zIndex: 100,
+              minWidth: '220px'
+            }}>
+              <h4 style={{ margin: '0 0 16px 0', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 500, letterSpacing: '0.5px' }}>TEMA DE LA APP</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {THEMES.map(theme => (
+                  <button
+                    key={theme.id}
+                    onClick={() => {
+                      setThemeId(theme.id);
+                      setShowSettings(false);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      background: themeId === theme.id ? 'rgba(255,255,255,0.08)' : 'transparent',
+                      border: '1px solid',
+                      borderColor: themeId === theme.id ? 'rgba(255,255,255,0.1)' : 'transparent',
+                      padding: '10px 14px',
+                      borderRadius: '8px',
+                      color: themeId === theme.id ? theme.accent : 'var(--text-main)',
+                      fontWeight: themeId === theme.id ? 600 : 400,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      width: '100%',
+                      textAlign: 'left'
+                    }}
+                    onMouseOver={(e) => {
+                      if (themeId !== theme.id) e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                    }}
+                    onMouseOut={(e) => {
+                      if (themeId !== theme.id) e.currentTarget.style.background = 'transparent';
+                    }}
+                  >
+                    <div style={{ 
+                      width: '16px', 
+                      height: '16px', 
+                      borderRadius: '50%', 
+                      background: theme.accent,
+                      boxShadow: `0 0 10px ${theme.accent}80`
+                    }}></div>
+                    {theme.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
