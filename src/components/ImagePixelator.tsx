@@ -690,8 +690,13 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
             value={pixelSize} 
             onChange={handleSliderChange}
             onPointerUp={handleSliderRelease}
+            disabled={currentRow != null}
             className="slider"
-            style={{ margin: '12px 0 4px 0' }}
+            style={{ 
+              margin: '12px 0 4px 0', 
+              opacity: currentRow != null ? 0.5 : 1,
+              cursor: currentRow != null ? 'not-allowed' : 'pointer'
+            }}
           />
           <div className="slider-labels" style={{ fontSize: '0.75rem' }}>
             <span>Menos</span>
