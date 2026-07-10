@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useLayoutEffect } from 'react';
 
 import type { SavedColor } from '../types';
 
@@ -14,9 +14,10 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [pixelSize, setPixelSize] = useState(initialPixelSize);
-  const [zoom, setZoom] = useState(1);
+  const [viewState, setViewState] = useState({ zoom: 1, panX: 0, panY: 0 });
   const [isPanning, setIsPanning] = useState(false);
-  const panStartRef = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
+  const [wrapperSize, setWrapperSize] = useState({ width: 0, height: 0 });
+  const panStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const [imageDims, setImageDims] = useState({ width: 0, height: 0 });
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
   
@@ -25,12 +26,23 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
   // Store pixel data for fast lookup on hover
   const pixelDataRef = useRef<{ data: Uint8ClampedArray; pointsWide: number; rectWidth: number; rectHeight: number } | null>(null);
 
+  const updateSize = () => {
+    if (wrapperRef.current) {
+      setWrapperSize({ 
+        width: wrapperRef.current.clientWidth, 
+        height: wrapperRef.current.clientHeight 
+      });
+    }
+  };
+
   useEffect(() => {
     const img = new Image();
     img.src = imageUrl;
     img.onload = () => {
       setOriginalImage(img);
       drawPixelated(img, pixelSize);
+      updateSize(); // Measure container when image loads!
+      setViewState({ zoom: 1, panX: 0, panY: 0 }); // Reset view
     };
   }, [imageUrl]);
 
@@ -41,12 +53,45 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-      // No upper limit, just lower limit to prevent inverting or going to 0
-      setZoom(prev => Math.max(0.1, prev * zoomFactor));
+      
+      if (!wrapperRef.current) return;
+
+      const rect = wrapperRef.current.getBoundingClientRect();
+      const wrapperCenterX = rect.left + rect.width / 2;
+      const wrapperCenterY = rect.top + rect.height / 2;
+
+      setViewState(prev => {
+        const newZoom = Math.max(0.1, prev.zoom * zoomFactor);
+        const F = newZoom / prev.zoom;
+        
+        const distX = e.clientX - (wrapperCenterX + prev.panX);
+        const distY = e.clientY - (wrapperCenterY + prev.panY);
+        
+        return {
+          zoom: newZoom,
+          panX: e.clientX - wrapperCenterX - distX * F,
+          panY: e.clientY - wrapperCenterY - distY * F
+        };
+      });
     };
     
     wrapper.addEventListener('wheel', handleWheel, { passive: false });
-    return () => wrapper.removeEventListener('wheel', handleWheel);
+    
+    return () => {
+      wrapper.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
+
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    
+    updateSize(); // Initial measure
+    window.addEventListener('resize', updateSize);
+    
+    return () => {
+      window.removeEventListener('resize', updateSize);
+    };
   }, []);
 
   const drawPixelated = (img: HTMLImageElement, pointsWide: number) => {
@@ -180,20 +225,23 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
         panStartRef.current = {
           x: e.clientX,
           y: e.clientY,
-          scrollLeft: wrapperRef.current.scrollLeft,
-          scrollTop: wrapperRef.current.scrollTop
+          panX: viewState.panX,
+          panY: viewState.panY
         };
       }
     }
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (isPanning && wrapperRef.current) {
+    if (isPanning) {
       e.preventDefault();
       const dx = e.clientX - panStartRef.current.x;
       const dy = e.clientY - panStartRef.current.y;
-      wrapperRef.current.scrollLeft = panStartRef.current.scrollLeft - dx;
-      wrapperRef.current.scrollTop = panStartRef.current.scrollTop - dy;
+      setViewState(prev => ({
+        ...prev,
+        panX: panStartRef.current.panX + dx,
+        panY: panStartRef.current.panY + dy
+      }));
     }
   };
 
@@ -225,6 +273,21 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     onUpdatePalette(palette.filter(c => c.id !== id));
   };
 
+  let fitWidth = 0;
+  let fitHeight = 0;
+  if (originalImage && wrapperSize.width > 0 && wrapperSize.height > 0) {
+    const imgAspect = originalImage.width / originalImage.height;
+    const wrapperAspect = wrapperSize.width / wrapperSize.height;
+    
+    if (imgAspect > wrapperAspect) {
+      fitWidth = wrapperSize.width;
+      fitHeight = fitWidth / imgAspect;
+    } else {
+      fitHeight = wrapperSize.height;
+      fitWidth = fitHeight * imgAspect;
+    }
+  }
+
   return (
     <div className="pixelator-container fade-in">
       <div className="pixelator-main">
@@ -234,10 +297,12 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
+          onMouseDown={(e) => { if (e.button === 1) e.preventDefault(); }}
           style={{ 
             cursor: isPanning ? 'grabbing' : 'auto',
-            display: 'block', 
-            textAlign: 'center'
+            overflow: 'hidden',
+            position: 'relative',
+            touchAction: 'none'
           }}
         >
           <canvas 
@@ -247,12 +312,16 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
             onClick={handleCanvasClick}
             style={{ 
               cursor: isPanning ? 'grabbing' : 'crosshair',
-              width: `${zoom * 100}%`,
-              height: 'auto',
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              transform: `translate(-50%, -50%) translate(${viewState.panX}px, ${viewState.panY}px) scale(${viewState.zoom})`,
+              transformOrigin: '50% 50%',
+              width: fitWidth ? `${fitWidth}px` : '100%',
+              height: fitHeight ? `${fitHeight}px` : '100%',
               maxWidth: 'none',
               maxHeight: 'none',
-              display: 'inline-block',
-              verticalAlign: 'middle'
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
             }}
           ></canvas>
         </div>
