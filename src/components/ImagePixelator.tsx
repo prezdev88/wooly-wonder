@@ -13,10 +13,10 @@ interface Props {
   markedPixel?: { x: number, y: number } | null;
   onUpdateMarkedPixel?: (pixel: { x: number, y: number } | null) => void;
   isFocusMode?: boolean;
-  onToggleFocus?: () => void;
+  onSetFocus?: (focus: boolean) => void;
 }
 
-export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, currentRow = null, onUpdateCurrentRow, markedPixel = null, onUpdateMarkedPixel, isFocusMode = false, onToggleFocus }: Props) {
+export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, currentRow = null, onUpdateCurrentRow, markedPixel = null, onUpdateMarkedPixel, isFocusMode = false, onSetFocus }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [pixelSize, setPixelSize] = useState(initialPixelSize);
@@ -406,7 +406,10 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
             boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
           }}>
             <button 
-              onClick={() => onUpdateCurrentRow?.(null)}
+              onClick={() => {
+                onUpdateCurrentRow?.(null);
+                onSetFocus?.(false);
+              }}
               style={{ background: 'transparent', border: 'none', color: '#ff6b6b', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.95rem' }}
             >
               ⏹ Salir
@@ -442,9 +445,9 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
           </div>
         )}
 
-        {onToggleFocus && (
+        {onSetFocus && (
           <button 
-            onClick={onToggleFocus}
+            onClick={() => onSetFocus(!isFocusMode)}
             style={{
               position: 'absolute',
               top: 16,
@@ -562,35 +565,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
           </span>
         </div>
         
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
-          <button 
-            onClick={() => onUpdateCurrentRow?.(0)}
-            style={{ 
-              background: 'var(--accent)', color: 'var(--bg-color)', border: 'none', 
-              padding: '12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-          >
-            ▶ Tejer desde Arriba
-          </button>
-          <button 
-            onClick={() => onUpdateCurrentRow?.(imageDims.height - 1)}
-            style={{ 
-              background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)', border: '1px solid var(--panel-border)', 
-              padding: '12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.transform = 'translateY(-2px)'}}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'translateY(0)'}}
-          >
-            ▶ Tejer desde Abajo
-          </button>
-        </div>
-        
+
         {palette.length === 0 ? (
           <div style={{ 
             flex: 1, display: 'flex', flexDirection: 'column', 
@@ -700,6 +675,34 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
             <span>Menos</span>
             <span>Más</span>
           </div>
+        </div>
+
+        <div style={{ marginTop: '24px' }}>
+          <button 
+            onClick={() => {
+              onUpdateCurrentRow?.(0);
+              onSetFocus?.(true);
+            }}
+            style={{ 
+              background: 'var(--accent)', color: 'var(--bg-color)', border: 'none', 
+              padding: '14px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              transition: 'all 0.2s',
+              fontSize: '1.2rem',
+              width: '100%',
+              boxShadow: '0 4px 15px rgba(157, 78, 221, 0.4)'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = 'translateY(-3px)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(157, 78, 221, 0.6)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 15px rgba(157, 78, 221, 0.4)';
+            }}
+          >
+            ▶ Tejer!
+          </button>
         </div>
 
       </aside>

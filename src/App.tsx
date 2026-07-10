@@ -74,12 +74,14 @@ function App() {
 
   const deleteProject = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.electronAPI) {
-      const updated = await window.electronAPI.deleteProject(id);
-      setProjects(updated);
-      if (activeProjectId === id) {
-        setActiveProjectId(null);
-        setActiveImage(null);
+    if (window.confirm('¿Estás seguro de que deseas eliminar este proyecto por completo?')) {
+      if (window.electronAPI) {
+        const updated = await window.electronAPI.deleteProject(id);
+        setProjects(updated);
+        if (activeProjectId === id) {
+          setActiveProjectId(null);
+          setActiveImage(null);
+        }
       }
     }
   };
@@ -400,7 +402,7 @@ function App() {
                 markedPixel={activeImage.markedPixel}
                 onUpdateMarkedPixel={handleUpdateMarkedPixel}
                 isFocusMode={isFocusMode}
-                onToggleFocus={() => setIsFocusMode(!isFocusMode)}
+                onSetFocus={setIsFocusMode}
               />
             </div>
           ) : (
