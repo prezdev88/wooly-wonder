@@ -20,6 +20,7 @@ function App() {
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState<ProjectImage | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [pastedFile, setPastedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -101,8 +102,9 @@ function App() {
     }
   };
 
-  const handleFileUpload = async (files: FileList | File[]) => {
-    if (!activeProject) return;
+  const handleFileUpload = async (files: FileList | File[], targetProject?: Project) => {
+    const proj = targetProject || activeProject;
+    if (!proj) return;
     
     const fileArray = Array.from(files).filter(f => f.type.startsWith('image/'));
     if (fileArray.length === 0) return;
@@ -123,17 +125,48 @@ function App() {
       });
     }));
 
-    const updatedProject = { ...activeProject, images: [...activeProject.images, ...newImages] };
+    const updatedProject = { ...proj, images: [...proj.images, ...newImages] };
     
     if (window.electronAPI) {
       const updatedProjects = await window.electronAPI.saveProject(updatedProject);
       setProjects(updatedProjects);
+      
+      if (targetProject) {
+        setActiveProjectId(targetProject.id);
+      }
       
       if (newImages.length === 1) {
         setActiveImage(newImages[0]);
       }
     }
   };
+
+  useEffect(() => {
+    const handleGlobalPaste = (e: ClipboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      
+      const imageItems = Array.from(items).filter(item => item.type.startsWith('image/'));
+      if (imageItems.length > 0) {
+        const file = imageItems[0].getAsFile();
+        if (file) {
+          if (activeProject) {
+            handleFileUpload([file]);
+          } else if (projects.length === 0) {
+            const newProj: Project = { id: Date.now().toString(), name: 'Nuevo Proyecto', images: [] };
+            handleFileUpload([file], newProj);
+          } else {
+            setPastedFile(file);
+          }
+        }
+      }
+    };
+    window.addEventListener('paste', handleGlobalPaste);
+    return () => window.removeEventListener('paste', handleGlobalPaste);
+  }, [activeProject, projects]);
 
   const onDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -469,6 +502,57 @@ function App() {
           )}
         </main>
       </div>
+
+      {pastedFile && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex',
+          alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(5px)'
+        }}>
+          <div style={{
+            background: 'var(--panel-bg)', padding: '30px', borderRadius: '12px',
+            border: '1px solid var(--panel-border)', minWidth: '400px', maxWidth: '90%',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+          }}>
+            <h2 style={{ margin: '0 0 20px 0', fontSize: '1.4rem' }}>¿Dónde quieres guardar la imagen pegada?</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '60vh', overflowY: 'auto' }}>
+              {projects.map(p => (
+                <button 
+                  key={p.id}
+                  onClick={() => {
+                    handleFileUpload([pastedFile], p);
+                    setPastedFile(null);
+                  }}
+                  style={{
+                    padding: '16px', background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-main)',
+                    textAlign: 'left', borderRadius: '8px', cursor: 'pointer',
+                    fontSize: '1rem', transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                >
+                  {p.name || 'Sin título'}
+                </button>
+              ))}
+            </div>
+            <div style={{ marginTop: '24px', textAlign: 'right' }}>
+              <button 
+                onClick={() => setPastedFile(null)}
+                style={{
+                  background: 'transparent', color: '#ff6b6b', border: '1px solid rgba(255,107,107,0.5)',
+                  padding: '8px 20px', borderRadius: '6px', cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,107,107,0.1)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
