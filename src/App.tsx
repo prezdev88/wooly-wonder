@@ -13,6 +13,7 @@ const THEMES = [
 
 function App() {
   const [themeId, setThemeId] = useState(localStorage.getItem('themeId') || 'purple');
+  const [customColor, setCustomColor] = useState(localStorage.getItem('customThemeColor') || '#FF0055');
   const [showSettings, setShowSettings] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -28,11 +29,22 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const theme = THEMES.find(t => t.id === themeId) || THEMES[0];
-    document.documentElement.style.setProperty('--accent', theme.accent);
-    document.documentElement.style.setProperty('--accent-hover', theme.hover);
+    let accent, hover;
+    if (themeId === 'custom') {
+      accent = customColor;
+      hover = customColor; // Para simplificar, el hover es el mismo color (o podríamos aclararlo)
+    } else {
+      const theme = THEMES.find(t => t.id === themeId) || THEMES[0];
+      accent = theme.accent;
+      hover = theme.hover;
+    }
+    document.documentElement.style.setProperty('--accent', accent);
+    document.documentElement.style.setProperty('--accent-hover', hover);
     localStorage.setItem('themeId', themeId);
-  }, [themeId]);
+    if (themeId === 'custom') {
+      localStorage.setItem('customThemeColor', customColor);
+    }
+  }, [themeId, customColor]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -272,6 +284,44 @@ function App() {
                     {theme.name}
                   </button>
                 ))}
+                  
+                  <div 
+                    onClick={() => setThemeId('custom')}
+                    style={{
+                      background: themeId === 'custom' ? 'rgba(255,255,255,0.1)' : 'transparent',
+                      border: '1px solid',
+                      borderColor: themeId === 'custom' ? 'var(--accent)' : 'var(--panel-border)',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      cursor: 'pointer',
+                      transition: 'var(--transition)'
+                    }}
+                  >
+                    <input 
+                      type="color" 
+                      value={themeId === 'custom' ? customColor : '#ffffff'}
+                      onChange={(e) => {
+                        setCustomColor(e.target.value);
+                        setThemeId('custom');
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ 
+                        width: '24px', 
+                        height: '24px', 
+                        padding: 0, 
+                        border: 'none', 
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        background: 'none'
+                      }}
+                    />
+                    <span style={{ fontSize: '1rem', color: themeId === 'custom' ? 'var(--accent)' : 'var(--text-main)', fontWeight: themeId === 'custom' ? 600 : 400, flex: 1 }}>
+                      Color Libre
+                    </span>
+                  </div>
               </div>
             </div>
           )}
