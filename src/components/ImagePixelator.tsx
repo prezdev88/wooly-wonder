@@ -12,7 +12,11 @@ interface Props {
 
 export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const [pixelSize, setPixelSize] = useState(initialPixelSize);
+  const [zoom, setZoom] = useState(1);
+  const [isPanning, setIsPanning] = useState(false);
+  const panStartRef = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
   const [imageDims, setImageDims] = useState({ width: 0, height: 0 });
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
   
@@ -29,6 +33,21 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
       drawPixelated(img, pixelSize);
     };
   }, [imageUrl]);
+
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+      // No upper limit, just lower limit to prevent inverting or going to 0
+      setZoom(prev => Math.max(0.1, prev * zoomFactor));
+    };
+    
+    wrapper.addEventListener('wheel', handleWheel, { passive: false });
+    return () => wrapper.removeEventListener('wheel', handleWheel);
+  }, []);
 
   const drawPixelated = (img: HTMLImageElement, pointsWide: number) => {
     const canvas = canvasRef.current;
@@ -152,7 +171,45 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     setHoverColor(null);
   }
 
-  const handleCanvasClick = () => {
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button === 1) { // Middle click
+      e.preventDefault();
+      setIsPanning(true);
+      e.currentTarget.setPointerCapture(e.pointerId);
+      if (wrapperRef.current) {
+        panStartRef.current = {
+          x: e.clientX,
+          y: e.clientY,
+          scrollLeft: wrapperRef.current.scrollLeft,
+          scrollTop: wrapperRef.current.scrollTop
+        };
+      }
+    }
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isPanning && wrapperRef.current) {
+      e.preventDefault();
+      const dx = e.clientX - panStartRef.current.x;
+      const dy = e.clientY - panStartRef.current.y;
+      wrapperRef.current.scrollLeft = panStartRef.current.scrollLeft - dx;
+      wrapperRef.current.scrollTop = panStartRef.current.scrollTop - dy;
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button === 1 && isPanning) {
+      setIsPanning(false);
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch (err) {}
+    }
+  };
+
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    // Only register click for palette on left click
+    if (e.button !== 0) return;
+    
     if (hoverColor) {
       if (!palette.find(c => c.hex === hoverColor.hex)) {
         onUpdatePalette([...palette, { id: Date.now().toString(), ...hoverColor }]);
@@ -171,13 +228,32 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
   return (
     <div className="pixelator-container fade-in">
       <div className="pixelator-main">
-        <div className="canvas-wrapper">
+        <div 
+          className="canvas-wrapper" 
+          ref={wrapperRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          style={{ 
+            cursor: isPanning ? 'grabbing' : 'auto',
+            display: 'block', 
+            textAlign: 'center'
+          }}
+        >
           <canvas 
             ref={canvasRef} 
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             onClick={handleCanvasClick}
-            style={{ cursor: 'crosshair' }}
+            style={{ 
+              cursor: isPanning ? 'grabbing' : 'crosshair',
+              width: `${zoom * 100}%`,
+              height: 'auto',
+              maxWidth: 'none',
+              maxHeight: 'none',
+              display: 'inline-block',
+              verticalAlign: 'middle'
+            }}
           ></canvas>
         </div>
         <div className="controls">
