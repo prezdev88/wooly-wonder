@@ -449,27 +449,6 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
           ></canvas>
         </div>
         
-        {!isFocusMode && (
-          <div className="controls">
-          <div className="controls-header">
-            <h3 style={{ margin: 0 }}>Resolución (Puntos)</h3>
-            <span className="dimensions">{imageDims.width} x {imageDims.height} pts</span>
-          </div>
-          <input 
-            type="range" 
-            min="10" 
-            max="150" 
-            value={pixelSize} 
-            onChange={handleSliderChange}
-            onPointerUp={handleSliderRelease}
-            className="slider"
-          />
-          <div className="slider-labels">
-            <span>Menos detalle</span>
-            <span>Más detalle</span>
-          </div>
-          </div>
-        )}
       </div>
       
       {!isFocusMode && (
@@ -625,6 +604,38 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
             ))}
           </div>
         )}
+
+        {/* Nivel de detalle (Slider) */}
+        <div style={{ 
+          marginTop: '16px', 
+          paddingTop: '20px', 
+          borderTop: '1px solid var(--panel-border)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-main)' }}>Resolución</h3>
+            <span className="dimensions" style={{ padding: '4px 10px', fontSize: '0.8rem' }}>
+              {imageDims.width} x {imageDims.height} pts
+            </span>
+          </div>
+          <input 
+            type="range" 
+            min="10" 
+            max="150" 
+            value={pixelSize} 
+            onChange={handleSliderChange}
+            onPointerUp={handleSliderRelease}
+            className="slider"
+            style={{ margin: '12px 0 4px 0' }}
+          />
+          <div className="slider-labels" style={{ fontSize: '0.75rem' }}>
+            <span>Menos</span>
+            <span>Más</span>
+          </div>
+        </div>
+
       </aside>
       )}
     </div>
