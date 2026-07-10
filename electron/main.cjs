@@ -1,0 +1,103 @@
+const { app, BrowserWindow, ipcMain, dialog, protocol, net } = require('electron');
+const path = require('path');
+const fs = require('fs');
+
+const isDev = process.env.NODE_ENV === 'development';
+
+// Setup data directories
+const dataDir = path.join(app.getPath('userData'), 'pixel-it-data');
+const imagesDir = path.join(dataDir, 'images');
+const dbPath = path.join(dataDir, 'projects.json');
+
+if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
+if (!fs.existsSync(dbPath)) fs.writeFileSync(dbPath, JSON.stringify({ projects: [] }));
+
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'pixelit', privileges: { standard: true, secure: true, supportFetchAPI: true, bypassCSP: true, corsEnabled: true } }
+]);
+
+function createWindow() {
+  const mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    minWidth: 900,
+    minHeight: 600,
+    titleBarStyle: 'hidden',
+    titleBarOverlay: {
+      color: '#1A1816', // matching our dark theme
+      symbolColor: '#F4F1DE',
+    },
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.cjs'),
+      nodeIntegration: false,
+      contextIsolation: true,
+      webSecurity: true // Important to keep this true and use custom protocol
+    },
+  });
+
+  if (isDev) {
+    mainWindow.loadURL('http://localhost:5173');
+    mainWindow.webContents.openDevTools();
+  } else {
+    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+  }
+}
+
+app.whenReady().then(() => {
+  protocol.handle('pixelit', (request) => {
+    let urlPath = request.url.slice('pixelit://'.length);
+    let filePath = decodeURIComponent(urlPath);
+    if (!filePath.startsWith('/')) {
+      filePath = '/' + filePath;
+    }
+    return net.fetch('file://' + filePath);
+  });
+
+  createWindow();
+
+  app.on('activate', function () {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
+
+app.on('window-all-closed', function () {
+  if (process.platform !== 'darwin') app.quit();
+});
+
+// IPC Handlers for Data Management
+ipcMain.handle('get-projects', () => {
+  return JSON.parse(fs.readFileSync(dbPath, 'utf8')).projects;
+});
+
+ipcMain.handle('save-project', (event, project) => {
+  const data = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+  const idx = data.projects.findIndex(p => p.id === project.id);
+  if (idx >= 0) {
+    data.projects[idx] = project;
+  } else {
+    data.projects.push(project);
+  }
+  fs.writeFileSync(dbPath, JSON.stringify(data));
+  return data.projects;
+});
+
+ipcMain.handle('delete-project', (event, projectId) => {
+  const data = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+  data.projects = data.projects.filter(p => p.id !== projectId);
+  fs.writeFileSync(dbPath, JSON.stringify(data));
+  return data.projects;
+});
+
+ipcMain.handle('save-image', (event, { base64Data, filename }) => {
+  const filePath = path.join(imagesDir, filename);
+  const base64Image = base64Data.split(';base64,').pop();
+  fs.writeFileSync(filePath, base64Image, { encoding: 'base64' });
+  // Ensure we format the path correctly for URLs (handle Windows backslashes)
+  const normalizedPath = filePath.replace(/\\/g, '/');
+  return `pixelit://${normalizedPath}`;
+});
+
+ipcMain.handle('show-open-dialog', async (event, options) => {
+  return await dialog.showOpenDialog(options);
+});
