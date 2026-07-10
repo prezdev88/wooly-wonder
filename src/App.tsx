@@ -14,6 +14,7 @@ const THEMES = [
 function App() {
   const [themeId, setThemeId] = useState(localStorage.getItem('themeId') || 'purple');
   const [showSettings, setShowSettings] = useState(false);
+  const [isFocusMode, setIsFocusMode] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState<ProjectImage | null>(null);
@@ -32,6 +33,16 @@ function App() {
     document.documentElement.style.setProperty('--accent-hover', theme.hover);
     localStorage.setItem('themeId', themeId);
   }, [themeId]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFocusMode) {
+        setIsFocusMode(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFocusMode]);
 
   const activeProject = projects.find(p => p.id === activeProjectId) || null;
 
@@ -173,11 +184,12 @@ function App() {
 
   return (
     <>
-      <header className="app-header">
-        <h1>Wooly Wonder 🧶</h1>
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', WebkitAppRegion: 'no-drag' as any, flex: 1, textAlign: 'center' }}>
-          {activeProject ? activeProject.name : 'Mis Patrones'}
-        </div>
+      {!isFocusMode && (
+        <header className="app-header">
+          <h1>Wooly Wonder 🧶</h1>
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', WebkitAppRegion: 'no-drag' as any, flex: 1, textAlign: 'center' }}>
+            {activeProject ? activeProject.name : 'Mis Patrones'}
+          </div>
         <div style={{ WebkitAppRegion: 'no-drag' as any, position: 'relative' }}>
           <button 
             onClick={() => setShowSettings(!showSettings)}
@@ -249,12 +261,14 @@ function App() {
           )}
         </div>
       </header>
+      )}
 
       <div className="app-container">
-        <aside className="sidebar">
-          <div className="sidebar-header">
-            <button className="new-btn" onClick={createProject}>+ Nuevo Proyecto</button>
-          </div>
+        {!isFocusMode && (
+          <aside className="sidebar">
+            <div className="sidebar-header">
+              <button className="new-btn" onClick={createProject}>+ Nuevo Proyecto</button>
+            </div>
           <div className="project-list">
             {projects.map(project => (
               <div 
@@ -278,17 +292,20 @@ function App() {
             )}
           </div>
         </aside>
+        )}
 
-        <main className="main-content">
+        <main className="main-content" style={{ padding: isFocusMode ? '0' : '40px' }}>
           {!activeProject ? (
             <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
               <h3>Selecciona o crea un proyecto en el menú</h3>
             </div>
           ) : activeImage ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%' }}>
-              <button className="back-btn" onClick={() => setActiveImage(null)}>
-                ← Volver a {activeProject.name}
-              </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: isFocusMode ? '0' : '20px', height: '100%' }}>
+              {!isFocusMode && (
+                <button className="back-btn" onClick={() => setActiveImage(null)}>
+                  ← Volver a {activeProject.name}
+                </button>
+              )}
               <ImagePixelator 
                 key={activeImage.id}
                 imageUrl={activeImage.url} 
@@ -296,6 +313,8 @@ function App() {
                 onUpdatePalette={handleUpdatePalette}
                 initialPixelSize={activeImage.pixelSize}
                 onUpdatePixelSize={handleUpdatePixelSize}
+                isFocusMode={isFocusMode}
+                onToggleFocus={() => setIsFocusMode(!isFocusMode)}
               />
             </div>
           ) : (

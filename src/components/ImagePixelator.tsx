@@ -7,10 +7,12 @@ interface Props {
   palette: SavedColor[];
   onUpdatePalette: (palette: SavedColor[]) => void;
   initialPixelSize?: number;
-  onUpdatePixelSize: (size: number) => void;
+  onUpdatePixelSize?: (size: number) => void;
+  isFocusMode?: boolean;
+  onToggleFocus?: () => void;
 }
 
-export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize }: Props) {
+export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, isFocusMode = false, onToggleFocus }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [pixelSize, setPixelSize] = useState(initialPixelSize);
@@ -181,6 +183,12 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     }
   };
 
+  const handleSliderRelease = () => {
+    if (onUpdatePixelSize) {
+        onUpdatePixelSize(pixelSize);
+    }
+  };
+
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas || !pixelDataRef.current) return;
@@ -289,8 +297,41 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
   }
 
   return (
-    <div className="pixelator-container fade-in">
-      <div className="pixelator-main">
+    <div className="pixelator-container fade-in" style={{ gap: isFocusMode ? 0 : '20px' }}>
+      <div className="pixelator-main" style={{ position: 'relative' }}>
+        
+        {onToggleFocus && (
+          <button 
+            onClick={onToggleFocus}
+            style={{
+              position: 'absolute',
+              top: 16,
+              right: 16,
+              zIndex: 100,
+              background: 'rgba(0,0,0,0.4)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              backdropFilter: 'blur(8px)',
+              color: 'var(--text-main)',
+              borderRadius: '8px',
+              width: '36px',
+              height: '36px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              opacity: isFocusMode ? 0.3 : 0.8,
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+              fontSize: '1.2rem'
+            }}
+            onMouseOver={e => e.currentTarget.style.opacity = '1'}
+            onMouseOut={e => e.currentTarget.style.opacity = isFocusMode ? '0.3' : '0.8'}
+            title={isFocusMode ? "Salir de Modo Concentración (Esc)" : "Modo Concentración"}
+          >
+            {isFocusMode ? '⤡' : '⤢'}
+          </button>
+        )}
+
         <div 
           className="canvas-wrapper" 
           ref={wrapperRef}
@@ -302,7 +343,8 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
             cursor: isPanning ? 'grabbing' : 'auto',
             overflow: 'hidden',
             position: 'relative',
-            touchAction: 'none'
+            touchAction: 'none',
+            borderRadius: isFocusMode ? 'var(--radius)' : undefined
           }}
         >
           <canvas 
@@ -325,26 +367,32 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
             }}
           ></canvas>
         </div>
-        <div className="controls">
-        <div className="controls-header">
-          <h3>Ajuste de Puntos</h3>
-          <span className="dimensions">{imageDims.width} × {imageDims.height} puntos</span>
-        </div>
-        <input 
-          type="range" 
-          min="10" 
-          max="200" 
-          value={pixelSize} 
-          onChange={handleSliderChange} 
-          onPointerUp={() => onUpdatePixelSize(pixelSize)}
-          className="slider"
-        />
-        <div className="slider-labels">
-          <span>Menos detalle</span>
-          <span>Más detalle (200 pts)</span>
-        </div>
         
-        {/* Color Inspector */}
+        {!isFocusMode && (
+          <div className="controls">
+          <div className="controls-header">
+            <h3 style={{ margin: 0 }}>Resolución (Puntos)</h3>
+            <span className="dimensions">{imageDims.width} x {imageDims.height} pts</span>
+          </div>
+          <input 
+            type="range" 
+            min="10" 
+            max="150" 
+            value={pixelSize} 
+            onChange={handleSliderChange}
+            onPointerUp={handleSliderRelease}
+            className="slider"
+          />
+          <div className="slider-labels">
+            <span>Menos detalle</span>
+            <span>Más detalle</span>
+          </div>
+          </div>
+        )}
+      </div>
+      
+      {!isFocusMode && (
+        <aside className="pixelator-sidebar">
         <div style={{ 
           marginTop: '24px', 
           padding: '16px', 
@@ -385,12 +433,9 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
             <div>B: {hoverColor ? hoverColor.b : '--'}</div>
           </div>
         </div>
-      </div>
-    </div>
-      
-      {/* Right Sidebar for Saved Colors */}
-      <div className="pixelator-sidebar">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        
+        {/* Right Sidebar for Saved Colors */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', marginTop: '24px' }}>
           <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-main)' }}>Mi Paleta</h3>
           <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.2)', padding: '4px 10px', borderRadius: '20px' }}>
             {palette.length} colores
@@ -471,7 +516,8 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
             ))}
           </div>
         )}
-      </div>
+      </aside>
+      )}
     </div>
   );
 }
