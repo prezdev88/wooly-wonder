@@ -210,7 +210,7 @@ function App() {
     setActiveImage(updatedImage);
   };
 
-  const handleUpdateMarkedPixel = (pixel: { x: number, y: number } | null) => {
+  const handleUpdateMarkedPixel = async (pixel: { x: number, y: number } | null) => {
     if (!activeProject || !activeImage) return;
     
     const updatedImage = { ...activeImage, markedPixel: pixel };
@@ -221,7 +221,7 @@ function App() {
     
     setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
     if (window.electronAPI) {
-      window.electronAPI.saveProject(updatedProject);
+      await window.electronAPI.saveProject(updatedProject);
     }
     setActiveImage(updatedImage);
   };

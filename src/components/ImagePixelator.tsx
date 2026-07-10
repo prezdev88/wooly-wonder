@@ -56,7 +56,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     if (originalImage) {
       drawPixelated(originalImage, pixelSize, currentRow ?? null, markedPixel ?? null);
     }
-  }, [currentRow, markedPixel]);
+  }, [originalImage, pixelSize, currentRow, markedPixel]);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
