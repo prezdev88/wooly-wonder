@@ -23,11 +23,8 @@ function createWindow() {
     height: 800,
     minWidth: 900,
     minHeight: 600,
+    frame: false,
     titleBarStyle: 'hidden',
-    titleBarOverlay: {
-      color: '#1A1816', // matching our dark theme
-      symbolColor: '#F4F1DE',
-    },
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false,
@@ -113,4 +110,12 @@ ipcMain.handle('save-pdf', async (event, { base64Data, filename }) => {
     return true;
   }
   return false;
+});
+
+ipcMain.on('close-app', () => {
+  app.quit();
+});
+
+ipcMain.on('minimize-app', () => {
+  BrowserWindow.getAllWindows()[0].minimize();
 });

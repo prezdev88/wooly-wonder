@@ -32,6 +32,8 @@ declare global {
       saveImage: (data: { base64Data: string; filename: string }) => Promise<string>;
       showOpenDialog: (options: any) => Promise<any>;
       savePdf: (data: { base64Data: string; filename: string }) => Promise<boolean>;
+      closeApp: () => void;
+      minimizeApp: () => void;
     };
   }
 }

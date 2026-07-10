@@ -269,13 +269,27 @@ function App() {
           <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', WebkitAppRegion: 'no-drag', flex: 1, textAlign: 'center' } as any}>
             {activeProject ? activeProject.name : 'Mis Patrones'}
           </div>
-        <div style={{ WebkitAppRegion: 'no-drag', position: 'relative' } as any}>
+        <div style={{ WebkitAppRegion: 'no-drag', position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' } as any}>
           <button 
             onClick={() => setShowSettings(!showSettings)}
             style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer', fontSize: '1.4rem', padding: '0 8px' }}
             title="Preferencias"
           >
             🎨
+          </button>
+          <button 
+            onClick={() => window.electronAPI.minimizeApp()}
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer', fontSize: '1.2rem', padding: '0 8px', opacity: 0.7 }}
+            title="Minimizar"
+          >
+            —
+          </button>
+          <button 
+            onClick={() => window.electronAPI.closeApp()}
+            style={{ background: 'transparent', border: 'none', color: '#ff5f56', cursor: 'pointer', fontSize: '1.2rem', padding: '0 8px', fontWeight: 'bold' }}
+            title="Cerrar"
+          >
+            ✕
           </button>
           
           {showSettings && (
