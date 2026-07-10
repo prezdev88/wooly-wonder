@@ -6,4 +6,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   deleteProject: (projectId) => ipcRenderer.invoke('delete-project', projectId),
   saveImage: (data) => ipcRenderer.invoke('save-image', data),
   showOpenDialog: (options) => ipcRenderer.invoke('show-open-dialog', options),
+  savePdf: (data) => ipcRenderer.invoke('save-pdf', data),
 });

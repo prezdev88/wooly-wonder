@@ -1,4 +1,5 @@
-import React, { useRef, useEffect, useState, useLayoutEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import { jsPDF } from 'jspdf';
 
 import type { SavedColor } from '../types';
 
@@ -14,14 +15,16 @@ interface Props {
   onUpdateMarkedPixel?: (pixel: { x: number, y: number } | null) => void;
   isFocusMode?: boolean;
   onSetFocus?: (focus: boolean) => void;
+  projectName?: string;
 }
 
-export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, currentRow = null, onUpdateCurrentRow, markedPixel = null, onUpdateMarkedPixel, isFocusMode = false, onSetFocus }: Props) {
+export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, currentRow = null, onUpdateCurrentRow, markedPixel = null, onUpdateMarkedPixel, isFocusMode = false, onSetFocus, projectName = 'Proyecto sin título' }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [pixelSize, setPixelSize] = useState(initialPixelSize);
   const [viewState, setViewState] = useState({ zoom: 1, panX: 0, panY: 0 });
   const [isPanning, setIsPanning] = useState(false);
+  const [notification, setNotification] = useState<string | null>(null);
   const [wrapperSize, setWrapperSize] = useState({ width: 0, height: 0 });
   const panStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const [imageDims, setImageDims] = useState({ width: 0, height: 0 });
@@ -369,6 +372,130 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     onUpdatePalette(palette.filter(c => c.id !== id));
   };
 
+  const exportToPDF = () => {
+    if (!canvasRef.current) return;
+    
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+    
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 15;
+    
+    // -- PAGE 1: PATTERN --
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(157, 78, 221);
+    doc.text(projectName, margin, margin + 10);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Patrón de Tejido", margin, margin + 18);
+    
+    let currentY = margin + 25;
+    
+    const canvas = canvasRef.current;
+    const canvasDataUrl = canvas.toDataURL('image/png', 1.0);
+    
+    const maxWidth = pageWidth - (margin * 2);
+    const maxHeight = pageHeight - currentY - margin - 10;
+    
+    let imgWidth = maxWidth;
+    let imgHeight = (canvas.height * maxWidth) / canvas.width;
+    
+    if (imgHeight > maxHeight) {
+      imgHeight = maxHeight;
+      imgWidth = (canvas.width * maxHeight) / canvas.height;
+    }
+    
+    const imgX = margin + (maxWidth - imgWidth) / 2;
+    doc.addImage(canvasDataUrl, 'PNG', imgX, currentY, imgWidth, imgHeight);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text("Generado por Wooly Wonder", pageWidth / 2, pageHeight - 8, { align: "center" });
+
+    // -- PAGE 2: PALETTE --
+    doc.addPage();
+    
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(157, 78, 221);
+    doc.text(projectName, margin, margin + 10);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Paleta de Colores", margin, margin + 18);
+    
+    currentY = margin + 30;
+    
+    if (palette && palette.length > 0) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      const startX = margin;
+      let x = startX;
+      let y = currentY;
+      
+      const boxSize = 10;
+      const spacingX = 45;
+      const spacingY = 15;
+      
+      palette.forEach((color) => {
+        if (x + spacingX > pageWidth - margin) {
+          x = startX;
+          y += spacingY;
+        }
+        
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color.hex);
+        if (result) {
+          const r = parseInt(result[1], 16);
+          const g = parseInt(result[2], 16);
+          const b = parseInt(result[3], 16);
+          doc.setFillColor(r, g, b);
+        } else {
+          doc.setFillColor(0, 0, 0);
+        }
+        
+        doc.rect(x, y, boxSize, boxSize, 'F');
+        doc.setDrawColor(200, 200, 200);
+        doc.rect(x, y, boxSize, boxSize, 'S');
+        
+        doc.setTextColor(60, 60, 60);
+        const label = color.name || color.hex;
+        doc.text(label, x + boxSize + 3, y + 7);
+        
+        x += spacingX;
+      });
+      
+    } else {
+      doc.setFontSize(10);
+      doc.setTextColor(150, 150, 150);
+      doc.text("(Sin colores guardados)", margin, currentY);
+    }
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text("Generado por Wooly Wonder", pageWidth / 2, pageHeight - 8, { align: "center" });
+    
+    const safeName = projectName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+    
+    const pdfBase64 = doc.output('datauristring');
+    window.electronAPI.savePdf({ base64Data: pdfBase64, filename: `${safeName}.pdf` })
+      .then((saved) => {
+        if (saved) {
+          setNotification(`✅ Tu patrón se guardó como ${safeName}.pdf`);
+          setTimeout(() => setNotification(null), 5000);
+        }
+      });
+  };
+
   let fitWidth = 0;
   let fitHeight = 0;
   if (originalImage && wrapperSize.width > 0 && wrapperSize.height > 0) {
@@ -677,7 +804,27 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
           </div>
         </div>
 
-        <div style={{ marginTop: '24px' }}>
+        <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <button 
+            onClick={exportToPDF}
+            style={{ 
+              background: 'transparent', color: 'var(--text-main)', border: '1px solid var(--panel-border)', 
+              padding: '12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              transition: 'all 0.2s',
+              fontSize: '1rem',
+              width: '100%'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = 'transparent';
+            }}
+          >
+            🖨️ Exportar a PDF
+          </button>
+          
           <button 
             onClick={() => {
               onUpdateCurrentRow?.(0);
@@ -706,6 +853,37 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
         </div>
 
       </aside>
+      )}
+
+      {notification && (
+        <>
+          <style>{`
+            @keyframes toastFadeIn {
+              from { opacity: 0; transform: translate(-50%, 20px); }
+              to { opacity: 1; transform: translate(-50%, 0); }
+            }
+          `}</style>
+          <div style={{
+            position: 'absolute',
+            bottom: '40px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'var(--accent)',
+            color: '#fff',
+            padding: '16px 32px',
+            borderRadius: '30px',
+            boxShadow: '0 8px 25px rgba(0,0,0,0.4)',
+            zIndex: 9999,
+            fontWeight: 'bold',
+            fontSize: '1.1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            animation: 'toastFadeIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'
+          }}>
+            {notification}
+          </div>
+        </>
       )}
     </div>
   );

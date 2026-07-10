@@ -266,10 +266,10 @@ function App() {
       {!isFocusMode && (
         <header className="app-header">
           <h1>Wooly Wonder 🧶</h1>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', WebkitAppRegion: 'no-drag' as any, flex: 1, textAlign: 'center' }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', WebkitAppRegion: 'no-drag', flex: 1, textAlign: 'center' } as any}>
             {activeProject ? activeProject.name : 'Mis Patrones'}
           </div>
-        <div style={{ WebkitAppRegion: 'no-drag' as any, position: 'relative' }}>
+        <div style={{ WebkitAppRegion: 'no-drag', position: 'relative' } as any}>
           <button 
             onClick={() => setShowSettings(!showSettings)}
             style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer', fontSize: '1.4rem', padding: '0 8px' }}
@@ -436,6 +436,7 @@ function App() {
                 onUpdateMarkedPixel={handleUpdateMarkedPixel}
                 isFocusMode={isFocusMode}
                 onSetFocus={setIsFocusMode}
+                projectName={activeProject.name || 'Proyecto sin título'}
               />
             </div>
           ) : (

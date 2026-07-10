@@ -9,9 +9,9 @@ Esta es nuestra hoja de ruta (roadmap) para llevar la aplicación desde su estad
 - [ ] (Opcional) Integrar `steamworks.js` si deseamos guardar los proyectos directamente en Steam Cloud.
 
 ## 🖨️ 2. Exportación de Patrones
-- [ ] Añadir un botón de "Exportar Patrón".
-- [ ] Implementar exportación a PDF (para que la usuaria pueda imprimir fácilmente el diseño en hojas A4).
-- [ ] Implementar exportación a Imagen de Alta Resolución (PNG/JPG), incluyendo la cuadrícula, los números de las filas/columnas y la paleta de colores seleccionada al lado.
+- [x] Añadir un botón de "Exportar Patrón".
+- [x] Implementar exportación a PDF (para que la usuaria pueda imprimir fácilmente el diseño en hojas A4).
+- [x] Implementar exportación a Imagen de Alta Resolución (PNG/JPG), incluyendo la cuadrícula, los números de las filas/columnas y la paleta de colores seleccionada al lado.
 
 ## 🌍 3. Internacionalización (Localización)
 - [ ] Configurar un sistema de idiomas (como `i18next`).

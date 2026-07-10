@@ -31,6 +31,7 @@ declare global {
       deleteProject: (id: string) => Promise<Project[]>;
       saveImage: (data: { base64Data: string; filename: string }) => Promise<string>;
       showOpenDialog: (options: any) => Promise<any>;
+      savePdf: (data: { base64Data: string; filename: string }) => Promise<boolean>;
     };
   }
 }

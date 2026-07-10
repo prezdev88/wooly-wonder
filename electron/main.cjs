@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, protocol, net } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol, net, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -99,4 +99,18 @@ ipcMain.handle('save-image', (event, { base64Data, filename }) => {
 
 ipcMain.handle('show-open-dialog', async (event, options) => {
   return await dialog.showOpenDialog(options);
+});
+
+ipcMain.handle('save-pdf', async (event, { base64Data, filename }) => {
+  const { canceled, filePath } = await dialog.showSaveDialog({
+    defaultPath: filename,
+    filters: [{ name: 'PDF', extensions: ['pdf'] }]
+  });
+  if (!canceled && filePath) {
+    const base64Content = base64Data.split(';base64,').pop();
+    fs.writeFileSync(filePath, base64Content, { encoding: 'base64' });
+    shell.openPath(filePath);
+    return true;
+  }
+  return false;
 });
