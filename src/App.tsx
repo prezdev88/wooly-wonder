@@ -52,9 +52,8 @@ function App() {
       const base64Data = e.target?.result as string;
       if (window.electronAPI) {
         const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        const savedUrl = await window.electronAPI.saveImage({ base64Data, filename });
         
-        const newImage: ProjectImage = { id: Date.now().toString(), url: savedUrl, filename };
+        const newImage: ProjectImage = { id: Date.now().toString(), url: base64Data, filename };
         const updatedProject = { ...activeProject, images: [...activeProject.images, newImage] };
         const updatedProjects = await window.electronAPI.saveProject(updatedProject);
         setProjects(updatedProjects);

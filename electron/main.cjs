@@ -32,13 +32,12 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false,
       contextIsolation: true,
-      webSecurity: true // Important to keep this true and use custom protocol
+      webSecurity: false // Disabled to easily load local file:// urls
     },
   });
 
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
-    mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
@@ -95,7 +94,7 @@ ipcMain.handle('save-image', (event, { base64Data, filename }) => {
   fs.writeFileSync(filePath, base64Image, { encoding: 'base64' });
   // Ensure we format the path correctly for URLs (handle Windows backslashes)
   const normalizedPath = filePath.replace(/\\/g, '/');
-  return `pixelit://${normalizedPath}`;
+  return `file://${normalizedPath}`;
 });
 
 ipcMain.handle('show-open-dialog', async (event, options) => {
