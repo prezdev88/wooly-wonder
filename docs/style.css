@@ -174,7 +174,7 @@ body {
     font-size: clamp(2.5rem, 5vw, 4.5rem);
     font-weight: 800;
     line-height: 1.1;
-    margin-bottom: 24px;
+    margin: 0 auto 24px;
     max-width: 900px;
     letter-spacing: -1px;
 }
@@ -189,18 +189,20 @@ body {
     font-size: clamp(1.1rem, 2vw, 1.25rem);
     color: var(--text-muted);
     max-width: 600px;
-    margin-bottom: 40px;
+    margin: 0 auto 40px;
     font-weight: 300;
 }
 
 .hero-cta {
     display: flex;
+    justify-content: center;
     gap: 16px;
     margin-bottom: 40px;
 }
 
 .hero-features-mini {
     display: flex;
+    justify-content: center;
     align-items: center;
     gap: 16px;
     font-size: 0.9rem;
