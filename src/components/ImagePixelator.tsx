@@ -115,9 +115,12 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     // Calculate height in points based on aspect ratio
     const pointsHigh = Math.max(1, Math.round((img.height / img.width) * pointsWide));
     
-    // Set actual canvas size to the source image size for high quality display
-    canvas.width = img.width;
-    canvas.height = img.height;
+    // To fix subpixel grid aliasing (ghost borders when zooming), we FORCE the 
+    // canvas size to be an EXACT multiple of pointsWide and pointsHigh.
+    // This ensures that every grid square is an exact integer number of pixels (e.g. 40x40).
+    const PIXELS_PER_SQUARE = Math.max(20, Math.floor(2000 / pointsWide)); 
+    canvas.width = pointsWide * PIXELS_PER_SQUARE;
+    canvas.height = pointsHigh * PIXELS_PER_SQUARE;
     
     // Turn off smoothing to get crisp blocks
     ctx.imageSmoothingEnabled = false;
@@ -135,18 +138,9 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
        // Save pixel data for the hover color inspector
        const imgData = offCtx.getImageData(0, 0, pointsWide, pointsHigh);
        
-       let rSum = 0, gSum = 0, bSum = 0;
-       for (let i = 0; i < imgData.data.length; i += 4) {
-         rSum += imgData.data[i];
-         gSum += imgData.data[i+1];
-         bSum += imgData.data[i+2];
-       }
-       const pixelCount = pointsWide * pointsHigh;
-       const luminance = (0.299 * (rSum / pixelCount) + 0.587 * (gSum / pixelCount) + 0.114 * (bSum / pixelCount));
-       const isLightImage = luminance > 127;
-       
-       const rectWidth = canvas.width / pointsWide;
-       const rectHeight = canvas.height / pointsHigh;
+       // rectWidth and rectHeight are now guaranteed to be EXACT integers
+       const rectWidth = PIXELS_PER_SQUARE;
+       const rectHeight = PIXELS_PER_SQUARE;
        
        pixelDataRef.current = {
          data: imgData.data,
@@ -156,15 +150,15 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
        };
        
        // Draw it back scaled up to the main canvas
+       ctx.imageSmoothingEnabled = false;
        ctx.drawImage(offscreen, 0, 0, pointsWide, pointsHigh, 0, 0, canvas.width, canvas.height);
        
-       // Calculate a line width that survives CSS downscaling (assuming display width ~800px)
-       const scaleRatio = canvas.width / 800;
-       
-       // Draw grid
+       // Draw grid with difference blending so it's always visible on dark and light areas
+       ctx.globalCompositeOperation = 'difference';
        ctx.beginPath();
-       ctx.strokeStyle = isLightImage ? 'rgba(0, 0, 0, 0.35)' : 'rgba(255, 255, 255, 0.5)';
-       ctx.lineWidth = Math.max(0.5, scaleRatio * 0.5);
+       ctx.strokeStyle = 'rgba(220, 220, 220, 1)';
+       // Thick enough to not disappear when CSS zoomed
+       ctx.lineWidth = Math.max(2, Math.floor(PIXELS_PER_SQUARE * 0.05));
        
        for (let x = 0; x <= canvas.width; x += rectWidth) {
          ctx.moveTo(x, 0);
@@ -176,6 +170,10 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
        }
        
        ctx.stroke();
+       ctx.globalCompositeOperation = 'source-over'; // Restore default
+       
+       // Since scaleRatio is gone, redefine a safe scale ratio for subsequent strokes
+       const scaleRatio = canvas.width / 800;
        
        // Draw Indices (1 to N for each row) ONLY in Knitting Mode
        if (rowToHighlight != null) {
