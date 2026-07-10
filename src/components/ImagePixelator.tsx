@@ -1,10 +1,14 @@
 import React, { useRef, useEffect, useState } from 'react';
 
+import type { SavedColor } from '../types';
+
 interface Props {
   imageUrl: string;
+  palette: SavedColor[];
+  onUpdatePalette: (palette: SavedColor[]) => void;
 }
 
-export default function ImagePixelator({ imageUrl }: Props) {
+export default function ImagePixelator({ imageUrl, palette, onUpdatePalette }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [pixelSize, setPixelSize] = useState(50);
   const [imageDims, setImageDims] = useState({ width: 0, height: 0 });
@@ -136,17 +140,35 @@ export default function ImagePixelator({ imageUrl }: Props) {
     setHoverColor(null);
   }
 
+  const handleCanvasClick = () => {
+    if (hoverColor) {
+      if (!palette.find(c => c.hex === hoverColor.hex)) {
+        onUpdatePalette([...palette, { id: Date.now().toString(), ...hoverColor }]);
+      }
+    }
+  };
+
+  const updateColorName = (id: string, name: string) => {
+    onUpdatePalette(palette.map(c => c.id === id ? { ...c, name } : c));
+  };
+
+  const removeColor = (id: string) => {
+    onUpdatePalette(palette.filter(c => c.id !== id));
+  };
+
   return (
     <div className="pixelator-container fade-in">
-      <div className="canvas-wrapper">
-        <canvas 
-          ref={canvasRef} 
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          style={{ cursor: 'crosshair' }}
-        ></canvas>
-      </div>
-      <div className="controls">
+      <div className="pixelator-main">
+        <div className="canvas-wrapper">
+          <canvas 
+            ref={canvasRef} 
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            onClick={handleCanvasClick}
+            style={{ cursor: 'crosshair' }}
+          ></canvas>
+        </div>
+        <div className="controls">
         <div className="controls-header">
           <h3>Ajuste de Puntos</h3>
           <span className="dimensions">{imageDims.width} × {imageDims.height} puntos</span>
@@ -205,6 +227,92 @@ export default function ImagePixelator({ imageUrl }: Props) {
             <div>B: {hoverColor ? hoverColor.b : '--'}</div>
           </div>
         </div>
+      </div>
+    </div>
+      
+      {/* Right Sidebar for Saved Colors */}
+      <div className="pixelator-sidebar">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-main)' }}>Mi Paleta</h3>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.2)', padding: '4px 10px', borderRadius: '20px' }}>
+            {palette.length} colores
+          </span>
+        </div>
+        
+        {palette.length === 0 ? (
+          <div style={{ 
+            flex: 1, display: 'flex', flexDirection: 'column', 
+            justifyContent: 'center', alignItems: 'center', textAlign: 'center', 
+            color: 'var(--text-muted)', opacity: 0.5, gap: '12px' 
+          }}>
+            <div style={{ fontSize: '3rem' }}>🎨</div>
+            <div style={{ fontSize: '0.95rem', lineHeight: '1.5' }}>
+              Haz clic en cualquier punto<br/>de la imagen para guardar<br/>su color aquí.
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', flex: 1, paddingRight: '4px' }}>
+            {palette.map(color => (
+              <div key={color.id} style={{ 
+                display: 'flex', alignItems: 'center', gap: '12px', 
+                background: 'rgba(0,0,0,0.2)', padding: '10px 14px', 
+                borderRadius: '10px', border: '1px solid rgba(255,255,255,0.03)',
+                transition: 'transform 0.2s, background 0.2s',
+                cursor: 'default'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.4)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.2)'}
+              >
+                <div style={{ 
+                  width: '32px', height: '32px', borderRadius: '6px', 
+                  background: color.hex, border: '2px solid rgba(255,255,255,0.1)',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                }}></div>
+                
+                <input 
+                  type="text" 
+                  value={color.name || ''} 
+                  placeholder={color.hex}
+                  onChange={(e) => updateColorName(color.id, e.target.value)}
+                  style={{ 
+                    flex: 1, background: 'transparent', border: '1px solid transparent', 
+                    color: 'var(--text-main)', fontSize: '0.9rem', outline: 'none',
+                    padding: '4px 6px', borderRadius: '4px', width: '100px',
+                    transition: 'border 0.2s, background 0.2s'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.background = 'rgba(255,255,255,0.05)';
+                    e.target.style.borderColor = 'rgba(255,255,255,0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.background = 'transparent';
+                    e.target.style.borderColor = 'transparent';
+                  }}
+                />
+                
+                <button 
+                  onClick={() => removeColor(color.id)}
+                  style={{ 
+                    background: 'transparent', border: 'none', color: 'var(--text-muted)', 
+                    cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center', 
+                    justifyContent: 'center', borderRadius: '6px', transition: 'all 0.2s' 
+                  }}
+                  title="Eliminar color"
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.color = '#ff6b6b';
+                    e.currentTarget.style.background = 'rgba(255,107,107,0.1)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.color = 'var(--text-muted)';
+                    e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

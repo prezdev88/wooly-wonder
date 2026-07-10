@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import ImagePixelator from './components/ImagePixelator'
-import type { Project, ProjectImage } from './types'
+import type { Project, ProjectImage, SavedColor } from './types'
 import './index.css'
 
 function App() {
@@ -90,6 +90,23 @@ function App() {
     }
   };
 
+  const handleUpdatePalette = async (newPalette: SavedColor[]) => {
+    if (!activeProject || !activeImage) return;
+    
+    const updatedImage = { ...activeImage, palette: newPalette };
+    const updatedProject = { 
+      ...activeProject, 
+      images: activeProject.images.map(img => img.id === activeImage.id ? updatedImage : img) 
+    };
+    
+    setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
+    setActiveImage(updatedImage);
+    
+    if (window.electronAPI) {
+      await window.electronAPI.saveProject(updatedProject);
+    }
+  };
+
   return (
     <>
       <header className="app-header">
@@ -138,7 +155,11 @@ function App() {
               <button className="back-btn" onClick={() => setActiveImage(null)}>
                 ← Volver a {activeProject.name}
               </button>
-              <ImagePixelator imageUrl={activeImage.url} />
+              <ImagePixelator 
+                imageUrl={activeImage.url} 
+                palette={activeImage.palette || []}
+                onUpdatePalette={handleUpdatePalette}
+              />
             </div>
           ) : (
             <div className="fade-in">

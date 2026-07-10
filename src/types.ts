@@ -2,6 +2,16 @@ export interface ProjectImage {
   id: string;
   url: string;
   filename: string;
+  palette?: SavedColor[];
+}
+
+export interface SavedColor {
+  id: string;
+  hex: string;
+  r: number;
+  g: number;
+  b: number;
+  name?: string;
 }
 
 export interface Project {
