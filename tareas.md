@@ -25,5 +25,5 @@ Esta es nuestra hoja de ruta (roadmap) para llevar la aplicación desde su estad
 - [ ] Probar la aplicación en distintos tamaños de pantalla para validar la responsividad (especialmente pantallas de laptops pequeñas de 13 pulgadas).
 
 ## 🌐 5. Presencia Web y Soporte
-- [ ] Crear una página web promocional (Landing Page) totalmente gratuita usando GitHub Pages para exhibir la aplicación.
+- [x] Crear una página web promocional (Landing Page) totalmente gratuita usando GitHub Pages para exhibir la aplicación.
 - [ ] Configurar un correo de soporte básico para cumplir con los requisitos de publicación de Steam.
