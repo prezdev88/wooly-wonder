@@ -127,7 +127,7 @@ function App() {
   return (
     <>
       <header className="app-header">
-        <h1>Pixel It 🧶</h1>
+        <h1>Wooly Wonder 🧶</h1>
         <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', WebkitAppRegion: 'no-drag' as any }}>
           {activeProject ? activeProject.name : 'Mis Patrones'}
         </div>
