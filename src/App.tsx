@@ -44,23 +44,38 @@ function App() {
     }
   };
 
-  const handleFileUpload = async (file: File) => {
-    if (!activeProject || !file.type.startsWith('image/')) return;
+  const handleFileUpload = async (files: FileList | File[]) => {
+    if (!activeProject) return;
     
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const base64Data = e.target?.result as string;
-      if (window.electronAPI) {
-        const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-        
-        const newImage: ProjectImage = { id: Date.now().toString(), url: base64Data, filename };
-        const updatedProject = { ...activeProject, images: [...activeProject.images, newImage] };
-        const updatedProjects = await window.electronAPI.saveProject(updatedProject);
-        setProjects(updatedProjects);
-        setActiveImage(newImage); // Auto-open the new image
+    const fileArray = Array.from(files).filter(f => f.type.startsWith('image/'));
+    if (fileArray.length === 0) return;
+    
+    const newImages = await Promise.all(fileArray.map(file => {
+      return new Promise<ProjectImage>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const base64Data = e.target?.result as string;
+          const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+          resolve({ 
+            id: Date.now().toString() + Math.random().toString(36).substring(2, 5), 
+            url: base64Data, 
+            filename 
+          });
+        };
+        reader.readAsDataURL(file);
+      });
+    }));
+
+    const updatedProject = { ...activeProject, images: [...activeProject.images, ...newImages] };
+    
+    if (window.electronAPI) {
+      const updatedProjects = await window.electronAPI.saveProject(updatedProject);
+      setProjects(updatedProjects);
+      
+      if (newImages.length === 1) {
+        setActiveImage(newImages[0]);
       }
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const onDragOver = (e: React.DragEvent) => {
@@ -76,7 +91,7 @@ function App() {
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFileUpload(e.dataTransfer.files[0]);
+      handleFileUpload(e.dataTransfer.files);
     }
   };
 
@@ -223,9 +238,10 @@ function App() {
                     ref={fileInputRef} 
                     style={{ display: 'none' }} 
                     accept="image/*"
+                    multiple
                     onChange={(e) => {
                       if (e.target.files && e.target.files.length > 0) {
-                        handleFileUpload(e.target.files[0]);
+                        handleFileUpload(e.target.files);
                         // Reset input so same file can be selected again
                         e.target.value = '';
                       }
