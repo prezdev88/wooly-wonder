@@ -8,11 +8,13 @@ interface Props {
   onUpdatePalette: (palette: SavedColor[]) => void;
   initialPixelSize?: number;
   onUpdatePixelSize?: (size: number) => void;
+  currentRow?: number | null;
+  onUpdateCurrentRow?: (row: number | null) => void;
   isFocusMode?: boolean;
   onToggleFocus?: () => void;
 }
 
-export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, isFocusMode = false, onToggleFocus }: Props) {
+export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, currentRow = null, onUpdateCurrentRow, isFocusMode = false, onToggleFocus }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [pixelSize, setPixelSize] = useState(initialPixelSize);
@@ -42,11 +44,17 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     img.src = imageUrl;
     img.onload = () => {
       setOriginalImage(img);
-      drawPixelated(img, pixelSize);
+      drawPixelated(img, pixelSize, currentRow ?? null);
       updateSize(); // Measure container when image loads!
       setViewState({ zoom: 1, panX: 0, panY: 0 }); // Reset view
     };
   }, [imageUrl]);
+
+  useEffect(() => {
+    if (originalImage) {
+      drawPixelated(originalImage, pixelSize, currentRow ?? null);
+    }
+  }, [currentRow]);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -96,7 +104,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     };
   }, []);
 
-  const drawPixelated = (img: HTMLImageElement, pointsWide: number) => {
+  const drawPixelated = (img: HTMLImageElement, pointsWide: number, rowToHighlight: number | null = null) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -169,6 +177,25 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
        }
        
        ctx.stroke();
+       
+       // Draw Row Highlight for Knitting Mode
+       if (rowToHighlight != null && rowToHighlight >= 0 && rowToHighlight < pointsHigh) {
+         // Dim upper rows
+         ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+         if (rowToHighlight > 0) {
+           ctx.fillRect(0, 0, canvas.width, rowToHighlight * rectHeight);
+         }
+         // Dim lower rows
+         if (rowToHighlight < pointsHigh - 1) {
+           ctx.fillRect(0, (rowToHighlight + 1) * rectHeight, canvas.width, canvas.height - (rowToHighlight + 1) * rectHeight);
+         }
+         
+         // Accentuate current row
+         const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#9D4EDD';
+         ctx.strokeStyle = accentColor;
+         ctx.lineWidth = Math.max(3, scaleRatio * 3);
+         ctx.strokeRect(0, rowToHighlight * rectHeight, canvas.width, rectHeight);
+       }
     }
     
     // Update displayed dimensions
@@ -179,7 +206,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     const newSize = parseInt(e.target.value, 10);
     setPixelSize(newSize);
     if (originalImage) {
-      drawPixelated(originalImage, newSize);
+      drawPixelated(originalImage, newSize, currentRow ?? null);
     }
   };
 
@@ -300,6 +327,60 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     <div className="pixelator-container fade-in" style={{ gap: isFocusMode ? 0 : '20px' }}>
       <div className="pixelator-main" style={{ position: 'relative' }}>
         
+        {currentRow != null && (
+          <div style={{
+            position: 'absolute',
+            bottom: '30px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 200,
+            background: 'rgba(0,0,0,0.85)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            borderRadius: '40px',
+            padding: '12px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '24px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
+          }}>
+            <button 
+              onClick={() => onUpdateCurrentRow?.(null)}
+              style={{ background: 'transparent', border: 'none', color: '#ff6b6b', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.95rem' }}
+            >
+              ⏹ Salir
+            </button>
+            <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.2)' }}></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <button 
+                onClick={() => onUpdateCurrentRow?.(Math.max(0, currentRow - 1))}
+                disabled={currentRow === 0}
+                style={{ 
+                  background: 'var(--panel-bg)', color: 'var(--text-main)', border: '1px solid var(--panel-border)',
+                  width: '40px', height: '40px', borderRadius: '50%', cursor: currentRow === 0 ? 'not-allowed' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: currentRow === 0 ? 0.5 : 1
+                }}
+              >
+                ▲
+              </button>
+              <div style={{ color: 'white', fontWeight: 500, fontSize: '1.1rem', minWidth: '120px', textAlign: 'center' }}>
+                Fila {currentRow + 1} <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>de {imageDims.height}</span>
+              </div>
+              <button 
+                onClick={() => onUpdateCurrentRow?.(Math.min(imageDims.height - 1, currentRow + 1))}
+                disabled={currentRow === imageDims.height - 1}
+                style={{ 
+                  background: 'var(--panel-bg)', color: 'var(--text-main)', border: '1px solid var(--panel-border)',
+                  width: '40px', height: '40px', borderRadius: '50%', cursor: currentRow === imageDims.height - 1 ? 'not-allowed' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: currentRow === imageDims.height - 1 ? 0.5 : 1
+                }}
+              >
+                ▼
+              </button>
+            </div>
+          </div>
+        )}
+
         {onToggleFocus && (
           <button 
             onClick={onToggleFocus}
@@ -439,6 +520,35 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
           <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.2)', padding: '4px 10px', borderRadius: '20px' }}>
             {palette.length} colores
           </span>
+        </div>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+          <button 
+            onClick={() => onUpdateCurrentRow?.(0)}
+            style={{ 
+              background: 'var(--accent)', color: 'var(--bg-color)', border: 'none', 
+              padding: '12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+          >
+            ▶ Tejer desde Arriba
+          </button>
+          <button 
+            onClick={() => onUpdateCurrentRow?.(imageDims.height - 1)}
+            style={{ 
+              background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)', border: '1px solid var(--panel-border)', 
+              padding: '12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.transform = 'translateY(-2px)'}}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'translateY(0)'}}
+          >
+            ▶ Tejer desde Abajo
+          </button>
         </div>
         
         {palette.length === 0 ? (

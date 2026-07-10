@@ -182,6 +182,22 @@ function App() {
     }
   };
 
+  const handleUpdateCurrentRow = (row: number | null) => {
+    if (!activeProject || !activeImage) return;
+    
+    const updatedImage = { ...activeImage, currentRow: row };
+    const updatedImages = activeProject.images.map(img => 
+      img.id === activeImage.id ? updatedImage : img
+    );
+    const updatedProject = { ...activeProject, images: updatedImages };
+    
+    setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
+    if (window.electronAPI) {
+      window.electronAPI.saveProject(updatedProject);
+    }
+    setActiveImage(updatedImage);
+  };
+
   return (
     <>
       {!isFocusMode && (
@@ -313,6 +329,8 @@ function App() {
                 onUpdatePalette={handleUpdatePalette}
                 initialPixelSize={activeImage.pixelSize}
                 onUpdatePixelSize={handleUpdatePixelSize}
+                currentRow={activeImage.currentRow}
+                onUpdateCurrentRow={handleUpdateCurrentRow}
                 isFocusMode={isFocusMode}
                 onToggleFocus={() => setIsFocusMode(!isFocusMode)}
               />

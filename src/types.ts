@@ -4,6 +4,7 @@ export interface ProjectImage {
   filename: string;
   palette?: SavedColor[];
   pixelSize?: number;
+  currentRow?: number | null;
 }
 
 export interface SavedColor {
