@@ -185,6 +185,35 @@ h1 { font-size: 1.5rem; letter-spacing: 0.5px; }
 }
 .gallery-item:hover { border-color: var(--accent); transform: scale(1.05); }
 .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+
+.delete-img-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-main);
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: var(--transition);
+  backdrop-filter: blur(4px);
+}
+.gallery-item:hover .delete-img-btn {
+  opacity: 1;
+}
+.delete-img-btn:hover {
+  background: #d62828;
+  border-color: #d62828;
+  transform: scale(1.1);
+}
+
 .gallery-item.add-new {
   display: flex;
   flex-direction: column;

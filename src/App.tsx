@@ -44,6 +44,21 @@ function App() {
     }
   };
 
+  const deleteImage = async (imgId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm('¿Estás seguro de que deseas eliminar esta foto del proyecto?')) {
+      if (!activeProject) return;
+      const updatedProject = { 
+        ...activeProject, 
+        images: activeProject.images.filter(img => img.id !== imgId) 
+      };
+      setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
+      if (window.electronAPI) {
+        await window.electronAPI.saveProject(updatedProject);
+      }
+    }
+  };
+
   const handleFileUpload = async (files: FileList | File[]) => {
     if (!activeProject) return;
     
@@ -221,6 +236,13 @@ function App() {
                 {activeProject.images.map(img => (
                   <div key={img.id} className="gallery-item" onClick={() => setActiveImage(img)}>
                     <img src={img.url} alt={img.filename} />
+                    <button 
+                      className="delete-img-btn"
+                      onClick={(e) => deleteImage(img.id, e)}
+                      title="Eliminar foto"
+                    >
+                      ×
+                    </button>
                   </div>
                 ))}
                 
