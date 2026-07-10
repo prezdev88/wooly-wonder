@@ -67,17 +67,23 @@ export default function ImagePixelator({ imageUrl }: Props) {
        ctx.drawImage(offscreen, 0, 0, pointsWide, pointsHigh, 0, 0, canvas.width, canvas.height);
        
        // Draw white grid on top
-       ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-       ctx.lineWidth = Math.max(1, canvas.width / 1500); // Slight scaling for better visibility
+       ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+       
+       // Calculate a line width that survives CSS downscaling (assuming display width ~800px)
+       const scaleRatio = canvas.width / 800;
+       ctx.lineWidth = Math.max(1.5, scaleRatio * 1.5);
+       
        ctx.beginPath();
        
        for (let x = 0; x <= pointsWide; x++) {
-         ctx.moveTo(x * rectWidth, 0);
-         ctx.lineTo(x * rectWidth, canvas.height);
+         const lineX = Math.round(x * rectWidth);
+         ctx.moveTo(lineX, 0);
+         ctx.lineTo(lineX, canvas.height);
        }
        for (let y = 0; y <= pointsHigh; y++) {
-         ctx.moveTo(0, y * rectHeight);
-         ctx.lineTo(canvas.width, y * rectHeight);
+         const lineY = Math.round(y * rectHeight);
+         ctx.moveTo(0, lineY);
+         ctx.lineTo(canvas.width, lineY);
        }
        
        ctx.stroke();
