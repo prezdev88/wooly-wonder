@@ -386,7 +386,9 @@ body {
     .showcase-container, .showcase-container.reverse {
         flex-direction: column;
         text-align: center;
+        gap: 40px;
     }
+    .showcase { padding: 60px 5%; }
 }
 
 /* CTA */
@@ -452,8 +454,14 @@ footer {
 
 /* Responsive */
 @media (max-width: 768px) {
-    .hero-cta { flex-direction: column; width: 100%; max-width: 300px; }
-    .hero-features-mini { display: none; }
+    .hero { padding: 100px 5% 40px; }
+    .hero-title { font-size: 2.2rem; }
+    .hero-cta { flex-direction: column; width: 100%; max-width: 300px; margin: 0 auto 30px; }
+    .hero-features-mini { display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem; }
+    .hero-features-mini .dot { display: none; }
     .nav-links a:not(.btn) { display: none; }
-    .mockup-sidebar { display: none; }
+    .hide-mobile { display: none; }
+    .navbar { padding: 15px 4%; }
+    .app-mockup { height: 300px; margin-top: 40px; }
+    .features-section, .cta-section { padding: 60px 5%; }
 }
