@@ -57,6 +57,16 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette }: P
        // Save pixel data for the hover color inspector
        const imgData = offCtx.getImageData(0, 0, pointsWide, pointsHigh);
        
+       let rSum = 0, gSum = 0, bSum = 0;
+       for (let i = 0; i < imgData.data.length; i += 4) {
+         rSum += imgData.data[i];
+         gSum += imgData.data[i+1];
+         bSum += imgData.data[i+2];
+       }
+       const pixelCount = pointsWide * pointsHigh;
+       const luminance = (0.299 * (rSum / pixelCount) + 0.587 * (gSum / pixelCount) + 0.114 * (bSum / pixelCount));
+       const isLightImage = luminance > 127;
+       
        const rectWidth = canvas.width / pointsWide;
        const rectHeight = canvas.height / pointsHigh;
        
@@ -70,8 +80,8 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette }: P
        // Draw it back scaled up to the main canvas
        ctx.drawImage(offscreen, 0, 0, pointsWide, pointsHigh, 0, 0, canvas.width, canvas.height);
        
-       // Draw white grid on top
-       ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+       // Draw dynamic grid on top based on image brightness
+       ctx.strokeStyle = isLightImage ? 'rgba(0, 0, 0, 0.35)' : 'rgba(255, 255, 255, 0.5)';
        
        // Calculate a line width that survives CSS downscaling (assuming display width ~800px)
        const scaleRatio = canvas.width / 800;
