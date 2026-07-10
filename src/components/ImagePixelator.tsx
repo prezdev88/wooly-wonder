@@ -6,11 +6,13 @@ interface Props {
   imageUrl: string;
   palette: SavedColor[];
   onUpdatePalette: (palette: SavedColor[]) => void;
+  initialPixelSize?: number;
+  onUpdatePixelSize: (size: number) => void;
 }
 
-export default function ImagePixelator({ imageUrl, palette, onUpdatePalette }: Props) {
+export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [pixelSize, setPixelSize] = useState(50);
+  const [pixelSize, setPixelSize] = useState(initialPixelSize);
   const [imageDims, setImageDims] = useState({ width: 0, height: 0 });
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
   
@@ -189,6 +191,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette }: P
           max="200" 
           value={pixelSize} 
           onChange={handleSliderChange} 
+          onPointerUp={() => onUpdatePixelSize(pixelSize)}
           className="slider"
         />
         <div className="slider-labels">

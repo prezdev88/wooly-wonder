@@ -3,6 +3,7 @@ export interface ProjectImage {
   url: string;
   filename: string;
   palette?: SavedColor[];
+  pixelSize?: number;
 }
 
 export interface SavedColor {

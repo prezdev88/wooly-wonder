@@ -107,6 +107,23 @@ function App() {
     }
   };
 
+  const handleUpdatePixelSize = async (newPixelSize: number) => {
+    if (!activeProject || !activeImage) return;
+    
+    const updatedImage = { ...activeImage, pixelSize: newPixelSize };
+    const updatedProject = { 
+      ...activeProject, 
+      images: activeProject.images.map(img => img.id === activeImage.id ? updatedImage : img) 
+    };
+    
+    setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
+    setActiveImage(updatedImage);
+    
+    if (window.electronAPI) {
+      await window.electronAPI.saveProject(updatedProject);
+    }
+  };
+
   return (
     <>
       <header className="app-header">
@@ -156,9 +173,12 @@ function App() {
                 ← Volver a {activeProject.name}
               </button>
               <ImagePixelator 
+                key={activeImage.id}
                 imageUrl={activeImage.url} 
                 palette={activeImage.palette || []}
                 onUpdatePalette={handleUpdatePalette}
+                initialPixelSize={activeImage.pixelSize}
+                onUpdatePixelSize={handleUpdatePixelSize}
               />
             </div>
           ) : (
