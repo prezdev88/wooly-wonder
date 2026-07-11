@@ -1,0 +1,60 @@
+{
+  "themes": {
+    "purple": "Morado Real",
+    "orange": "Terracota",
+    "green": "Bosque",
+    "blue": "Océano",
+    "pink": "Chicle"
+  },
+  "app": {
+    "title": "Wooly Wonder 🧶",
+    "myPatterns": "Mis Patrones",
+    "preferences": "Preferencias",
+    "minimize": "Minimizar",
+    "close": "Cerrar",
+    "appTheme": "TEMA DE LA APP",
+    "customColor": "Color Libre",
+    "language": "IDIOMA",
+    "spanish": "Español",
+    "english": "Inglés"
+  },
+  "project": {
+    "newProject": "+ Nuevo Proyecto",
+    "untitled": "Sin título",
+    "deleteProject": "Eliminar proyecto",
+    "noProjects": "No tienes proyectos aún.",
+    "selectOrCreate": "Selecciona o crea un proyecto en el menú",
+    "backTo": "← Volver a ",
+    "untitledProject": "Proyecto sin título",
+    "projectName": "Nombre del proyecto",
+    "deletePhoto": "Eliminar foto",
+    "uploadImage": "Subir imagen",
+    "whereToSave": "¿Dónde quieres guardar la imagen pegada?",
+    "cancel": "Cancelar",
+    "confirmDeleteProject": "¿Estás seguro de que deseas eliminar este proyecto por completo?",
+    "confirmDeletePhoto": "¿Estás seguro de que deseas eliminar esta foto del proyecto?",
+    "newProjectDefault": "Nuevo Proyecto"
+  },
+  "pixelator": {
+    "exit": "⏹ Salir",
+    "row": "Fila",
+    "of": "de",
+    "exitFocusMode": "Salir de Modo Concentración (Esc)",
+    "enterFocusMode": "Modo Concentración",
+    "inspectedColor": "Color Inspeccionado",
+    "myPalette": "Mi Paleta",
+    "colors": "colores",
+    "clickToSave": "Haz clic en cualquier punto\nde la imagen para guardar\nsu color aquí.",
+    "deleteColor": "Eliminar color",
+    "resolution": "Resolución",
+    "less": "Menos",
+    "more": "Más",
+    "exportPdf": "🖨️ Exportar a PDF",
+    "knit": "▶ Tejer!",
+    "patternSubtitle": "Patrón de Tejido",
+    "generatedBy": "Generado por Wooly Wonder",
+    "paletteSubtitle": "Paleta de Colores",
+    "noColorsSaved": "(Sin colores guardados)",
+    "pdfSaved": "✅ Tu patrón se guardó como {{filename}}"
+  }
+}

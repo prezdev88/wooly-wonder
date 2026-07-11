@@ -1,17 +1,19 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import ImagePixelator from './components/ImagePixelator'
 import type { Project, ProjectImage, SavedColor } from './types'
 import './index.css'
 
 const THEMES = [
-  { id: 'purple', name: 'Morado Real', accent: '#9D4EDD', hover: '#C77DFF' },
-  { id: 'orange', name: 'Terracota', accent: '#E07A5F', hover: '#F4A261' },
-  { id: 'green', name: 'Bosque', accent: '#2A9D8F', hover: '#45B8AA' },
-  { id: 'blue', name: 'Océano', accent: '#3A86FF', hover: '#6BA2FF' },
-  { id: 'pink', name: 'Chicle', accent: '#FF006E', hover: '#FF4D99' },
+  { id: 'purple', nameKey: 'purple', accent: '#9D4EDD', hover: '#C77DFF' },
+  { id: 'orange', nameKey: 'orange', accent: '#E07A5F', hover: '#F4A261' },
+  { id: 'green', nameKey: 'green', accent: '#2A9D8F', hover: '#45B8AA' },
+  { id: 'blue', nameKey: 'blue', accent: '#3A86FF', hover: '#6BA2FF' },
+  { id: 'pink', nameKey: 'pink', accent: '#FF006E', hover: '#FF4D99' },
 ];
 
 function App() {
+  const { t, i18n } = useTranslation();
   const [themeId, setThemeId] = useState(localStorage.getItem('themeId') || 'purple');
   const [customColor, setCustomColor] = useState(localStorage.getItem('customThemeColor') || '#FF0055');
   const [showSettings, setShowSettings] = useState(false);
@@ -62,7 +64,7 @@ function App() {
   const createProject = async () => {
     const newProject: Project = {
       id: Date.now().toString(),
-      name: `Nuevo Proyecto ${projects.length + 1}`,
+      name: `${t('project.newProjectDefault')} ${projects.length + 1}`,
       images: []
     };
     if (window.electronAPI) {
@@ -75,7 +77,7 @@ function App() {
 
   const deleteProject = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('¿Estás seguro de que deseas eliminar este proyecto por completo?')) {
+    if (window.confirm(t('project.confirmDeleteProject'))) {
       if (window.electronAPI) {
         const updated = await window.electronAPI.deleteProject(id);
         setProjects(updated);
@@ -89,7 +91,7 @@ function App() {
 
   const deleteImage = async (imgId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('¿Estás seguro de que deseas eliminar esta foto del proyecto?')) {
+    if (window.confirm(t('project.confirmDeletePhoto'))) {
       if (!activeProject) return;
       const updatedProject = { 
         ...activeProject, 
@@ -156,7 +158,7 @@ function App() {
           if (activeProject) {
             handleFileUpload([file]);
           } else if (projects.length === 0) {
-            const newProj: Project = { id: Date.now().toString(), name: 'Nuevo Proyecto', images: [] };
+            const newProj: Project = { id: Date.now().toString(), name: t('project.newProjectDefault'), images: [] };
             handleFileUpload([file], newProj);
           } else {
             setPastedFile(file);
@@ -265,29 +267,29 @@ function App() {
     <>
       {!isFocusMode && (
         <header className="app-header">
-          <h1>Wooly Wonder 🧶</h1>
+          <h1>{t('app.title')}</h1>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', WebkitAppRegion: 'no-drag', flex: 1, textAlign: 'center' } as any}>
-            {activeProject ? activeProject.name : 'Mis Patrones'}
+            {activeProject ? activeProject.name : t('app.myPatterns')}
           </div>
         <div style={{ WebkitAppRegion: 'no-drag', position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' } as any}>
           <button 
             onClick={() => setShowSettings(!showSettings)}
             style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer', fontSize: '1.4rem', padding: '0 8px' }}
-            title="Preferencias"
+            title={t('app.preferences')}
           >
             🎨
           </button>
           <button 
             onClick={() => window.electronAPI.minimizeApp()}
             style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer', fontSize: '1.2rem', padding: '0 8px', opacity: 0.7 }}
-            title="Minimizar"
+            title={t('app.minimize')}
           >
             —
           </button>
           <button 
             onClick={() => window.electronAPI.closeApp()}
             style={{ background: 'transparent', border: 'none', color: '#ff5f56', cursor: 'pointer', fontSize: '1.2rem', padding: '0 8px', fontWeight: 'bold' }}
-            title="Cerrar"
+            title={t('app.close')}
           >
             ✕
           </button>
@@ -307,7 +309,7 @@ function App() {
               zIndex: 100,
               minWidth: '220px'
             }}>
-              <h4 style={{ margin: '0 0 16px 0', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 500, letterSpacing: '0.5px' }}>TEMA DE LA APP</h4>
+              <h4 style={{ margin: '0 0 16px 0', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 500, letterSpacing: '0.5px' }}>{t('app.appTheme')}</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {THEMES.map(theme => (
                   <button
@@ -346,7 +348,7 @@ function App() {
                       background: theme.accent,
                       boxShadow: `0 0 10px ${theme.accent}80`
                     }}></div>
-                    {theme.name}
+                    {t('themes.' + theme.nameKey)}
                   </button>
                 ))}
                   
@@ -384,9 +386,40 @@ function App() {
                       }}
                     />
                     <span style={{ fontSize: '1rem', color: themeId === 'custom' ? 'var(--accent)' : 'var(--text-main)', fontWeight: themeId === 'custom' ? 600 : 400, flex: 1 }}>
-                      Color Libre
+                      {t('app.customColor')}
                     </span>
                   </div>
+              </div>
+              <h4 style={{ margin: '16px 0', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 500, letterSpacing: '0.5px' }}>{t('app.language')}</h4>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => {
+                    i18n.changeLanguage('es');
+                    localStorage.setItem('language', 'es');
+                  }}
+                  style={{
+                    flex: 1, padding: '6px', borderRadius: '6px', cursor: 'pointer',
+                    background: i18n.language === 'es' ? 'var(--accent)' : 'transparent',
+                    border: '1px solid', borderColor: i18n.language === 'es' ? 'transparent' : 'var(--panel-border)',
+                    color: i18n.language === 'es' ? '#fff' : 'var(--text-main)'
+                  }}
+                >
+                  {t('app.spanish')}
+                </button>
+                <button
+                  onClick={() => {
+                    i18n.changeLanguage('en');
+                    localStorage.setItem('language', 'en');
+                  }}
+                  style={{
+                    flex: 1, padding: '6px', borderRadius: '6px', cursor: 'pointer',
+                    background: i18n.language === 'en' ? 'var(--accent)' : 'transparent',
+                    border: '1px solid', borderColor: i18n.language === 'en' ? 'transparent' : 'var(--panel-border)',
+                    color: i18n.language === 'en' ? '#fff' : 'var(--text-main)'
+                  }}
+                >
+                  {t('app.english')}
+                </button>
               </div>
             </div>
           )}
@@ -398,7 +431,7 @@ function App() {
         {!isFocusMode && (
           <aside className="sidebar">
             <div className="sidebar-header">
-              <button className="new-btn" onClick={createProject}>+ Nuevo Proyecto</button>
+              <button className="new-btn" onClick={createProject}>{t('project.newProject')}</button>
             </div>
           <div className="project-list">
             {projects.map(project => (
@@ -410,15 +443,15 @@ function App() {
                   setActiveImage(null);
                 }}
               >
-                <span>{project.name || 'Sin título'}</span>
-                <button className="delete-btn" onClick={(e) => deleteProject(project.id, e)} title="Eliminar proyecto">
+                <span>{project.name || t('project.untitled')}</span>
+                <button className="delete-btn" onClick={(e) => deleteProject(project.id, e)} title={t('project.deleteProject')}>
                   ×
                 </button>
               </div>
             ))}
             {projects.length === 0 && (
               <div style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '20px', fontSize: '0.9rem' }}>
-                No tienes proyectos aún.
+                {t('project.noProjects')}
               </div>
             )}
           </div>
@@ -428,13 +461,13 @@ function App() {
         <main className="main-content" style={{ padding: isFocusMode ? '0' : '40px' }}>
           {!activeProject ? (
             <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-              <h3>Selecciona o crea un proyecto en el menú</h3>
+              <h3>{t('project.selectOrCreate')}</h3>
             </div>
           ) : activeImage ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: isFocusMode ? '0' : '20px', height: '100%' }}>
               {!isFocusMode && (
                 <button className="back-btn" onClick={() => setActiveImage(null)}>
-                  ← Volver a {activeProject.name}
+                  {t('project.backTo')}{activeProject.name}
                 </button>
               )}
               <ImagePixelator 
@@ -450,7 +483,7 @@ function App() {
                 onUpdateMarkedPixel={handleUpdateMarkedPixel}
                 isFocusMode={isFocusMode}
                 onSetFocus={setIsFocusMode}
-                projectName={activeProject.name || 'Proyecto sin título'}
+                projectName={activeProject.name || t('project.untitledProject')}
               />
             </div>
           ) : (
@@ -471,7 +504,7 @@ function App() {
                   width: '100%',
                   marginBottom: '20px'
                 }}
-                placeholder="Nombre del proyecto"
+                placeholder={t('project.projectName')}
               />
               
               <div className="gallery">
@@ -481,7 +514,7 @@ function App() {
                     <button 
                       className="delete-img-btn"
                       onClick={(e) => deleteImage(img.id, e)}
-                      title="Eliminar foto"
+                      title={t('project.deletePhoto')}
                     >
                       ×
                     </button>
@@ -496,7 +529,7 @@ function App() {
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <span style={{ fontSize: '2rem', marginBottom: '8px' }}>+</span>
-                  <span style={{ fontSize: '0.9rem' }}>Subir imagen</span>
+                  <span style={{ fontSize: '0.9rem' }}>{t('project.uploadImage')}</span>
                   <input 
                     type="file" 
                     ref={fileInputRef} 
@@ -529,7 +562,7 @@ function App() {
             border: '1px solid var(--panel-border)', minWidth: '400px', maxWidth: '90%',
             boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
           }}>
-            <h2 style={{ margin: '0 0 20px 0', fontSize: '1.4rem' }}>¿Dónde quieres guardar la imagen pegada?</h2>
+            <h2 style={{ margin: '0 0 20px 0', fontSize: '1.4rem' }}>{t('project.whereToSave')}</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '60vh', overflowY: 'auto' }}>
               {projects.map(p => (
                 <button 
@@ -547,7 +580,7 @@ function App() {
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                 >
-                  {p.name || 'Sin título'}
+                  {p.name || t('project.untitled')}
                 </button>
               ))}
             </div>
@@ -562,7 +595,7 @@ function App() {
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,107,107,0.1)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
               >
-                Cancelar
+                {t('project.cancel')}
               </button>
             </div>
           </div>

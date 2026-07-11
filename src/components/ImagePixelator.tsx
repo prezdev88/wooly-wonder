@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { jsPDF } from 'jspdf';
+import { useTranslation } from 'react-i18next';
 
 import type { SavedColor } from '../types';
 
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, currentRow = null, onUpdateCurrentRow, markedPixel = null, onUpdateMarkedPixel, isFocusMode = false, onSetFocus, projectName = 'Proyecto sin título' }: Props) {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [pixelSize, setPixelSize] = useState(initialPixelSize);
@@ -394,7 +396,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
     doc.setTextColor(100, 100, 100);
-    doc.text("Patrón de Tejido", margin, margin + 18);
+    doc.text(t('pixelator.patternSubtitle'), margin, margin + 18);
     
     let currentY = margin + 25;
     
@@ -418,7 +420,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
-    doc.text("Generado por Wooly Wonder", pageWidth / 2, pageHeight - 8, { align: "center" });
+    doc.text(t('pixelator.generatedBy'), pageWidth / 2, pageHeight - 8, { align: "center" });
 
     // -- PAGE 2: PALETTE --
     doc.addPage();
@@ -431,7 +433,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
     doc.setTextColor(100, 100, 100);
-    doc.text("Paleta de Colores", margin, margin + 18);
+    doc.text(t('pixelator.paletteSubtitle'), margin, margin + 18);
     
     currentY = margin + 30;
     
@@ -476,13 +478,13 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     } else {
       doc.setFontSize(10);
       doc.setTextColor(150, 150, 150);
-      doc.text("(Sin colores guardados)", margin, currentY);
+      doc.text(t('pixelator.noColorsSaved'), margin, currentY);
     }
     
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
-    doc.text("Generado por Wooly Wonder", pageWidth / 2, pageHeight - 8, { align: "center" });
+    doc.text(t('pixelator.generatedBy'), pageWidth / 2, pageHeight - 8, { align: "center" });
     
     const safeName = projectName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
     
@@ -490,7 +492,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     window.electronAPI.savePdf({ base64Data: pdfBase64, filename: `${safeName}.pdf` })
       .then((saved) => {
         if (saved) {
-          setNotification(`✅ Tu patrón se guardó como ${safeName}.pdf`);
+          setNotification(t('pixelator.pdfSaved', { filename: `${safeName}.pdf` }));
           setTimeout(() => setNotification(null), 5000);
         }
       });
@@ -539,7 +541,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
               }}
               style={{ background: 'transparent', border: 'none', color: '#ff6b6b', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.95rem' }}
             >
-              ⏹ Salir
+              {t('pixelator.exit')}
             </button>
             <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.2)' }}></div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
@@ -555,7 +557,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
                 ▲
               </button>
               <div style={{ color: 'white', fontWeight: 500, fontSize: '1.1rem', minWidth: '120px', textAlign: 'center' }}>
-                Fila {currentRow + 1} <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>de {imageDims.height}</span>
+                {t('pixelator.row')} {currentRow + 1} <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t('pixelator.of')} {imageDims.height}</span>
               </div>
               <button 
                 onClick={() => onUpdateCurrentRow?.(Math.min(imageDims.height - 1, currentRow + 1))}
@@ -598,7 +600,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
             }}
             onMouseOver={e => e.currentTarget.style.opacity = '1'}
             onMouseOut={e => e.currentTarget.style.opacity = isFocusMode ? '0.3' : '0.8'}
-            title={isFocusMode ? "Salir de Modo Concentración (Esc)" : "Modo Concentración"}
+            title={isFocusMode ? t('pixelator.exitFocusMode') : t('pixelator.enterFocusMode')}
           >
             {isFocusMode ? '⤡' : '⤢'}
           </button>
@@ -664,7 +666,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
           }}></div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-              Color Inspeccionado
+              {t('pixelator.inspectedColor')}
             </div>
             <div style={{ fontSize: '1.4rem', fontWeight: 600, color: hoverColor ? 'var(--text-main)' : 'var(--text-muted)' }}>
               {hoverColor ? hoverColor.hex : '#------'}
@@ -686,9 +688,9 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
         
         {/* Right Sidebar for Saved Colors */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', marginTop: '24px' }}>
-          <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-main)' }}>Mi Paleta</h3>
+          <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-main)' }}>{t('pixelator.myPalette')}</h3>
           <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', background: 'rgba(0,0,0,0.2)', padding: '4px 10px', borderRadius: '20px' }}>
-            {palette.length} colores
+            {palette.length} {t('pixelator.colors')}
           </span>
         </div>
         
@@ -700,8 +702,8 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
             color: 'var(--text-muted)', opacity: 0.5, gap: '12px' 
           }}>
             <div style={{ fontSize: '3rem' }}>🎨</div>
-            <div style={{ fontSize: '0.95rem', lineHeight: '1.5' }}>
-              Haz clic en cualquier punto<br/>de la imagen para guardar<br/>su color aquí.
+            <div style={{ fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-line' }}>
+              {t('pixelator.clickToSave')}
             </div>
           </div>
         ) : (
@@ -751,7 +753,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
                     cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center', 
                     justifyContent: 'center', borderRadius: '6px', transition: 'all 0.2s' 
                   }}
-                  title="Eliminar color"
+                  title={t('pixelator.deleteColor')}
                   onMouseOver={(e) => {
                     e.currentTarget.style.color = '#ff6b6b';
                     e.currentTarget.style.background = 'rgba(255,107,107,0.1)';
@@ -778,7 +780,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
           gap: '8px'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-main)' }}>Resolución</h3>
+            <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-main)' }}>{t('pixelator.resolution')}</h3>
             <span className="dimensions" style={{ padding: '4px 10px', fontSize: '0.8rem' }}>
               {imageDims.width} x {imageDims.height} pts
             </span>
@@ -799,8 +801,8 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
             }}
           />
           <div className="slider-labels" style={{ fontSize: '0.75rem' }}>
-            <span>Menos</span>
-            <span>Más</span>
+            <span>{t('pixelator.less')}</span>
+            <span>{t('pixelator.more')}</span>
           </div>
         </div>
 
@@ -822,7 +824,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
               e.currentTarget.style.background = 'transparent';
             }}
           >
-            🖨️ Exportar a PDF
+            {t('pixelator.exportPdf')}
           </button>
           
           <button 
@@ -848,7 +850,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
               e.currentTarget.style.boxShadow = '0 4px 15px rgba(157, 78, 221, 0.4)';
             }}
           >
-            ▶ Tejer!
+            {t('pixelator.knit')}
           </button>
         </div>
 

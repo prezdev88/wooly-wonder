@@ -14,10 +14,10 @@ Esta es nuestra hoja de ruta (roadmap) para llevar la aplicación desde su estad
 - [x] Implementar exportación a Imagen de Alta Resolución (PNG/JPG), incluyendo la cuadrícula, los números de las filas/columnas y la paleta de colores seleccionada al lado.
 
 ## 🌍 3. Internacionalización (Localización)
-- [ ] Configurar un sistema de idiomas (como `i18next`).
-- [ ] Extraer todo el texto "duro" de la aplicación (botones, menús, confirmaciones) a archivos de traducción.
-- [ ] Crear la traducción completa al Inglés.
-- [ ] Añadir un selector de idioma en el panel de configuración (⚙️) para cambiar entre Inglés y Español en tiempo real.
+- [x] Configurar un sistema de idiomas (como `i18next`).
+- [x] Extraer todo el texto "duro" de la aplicación (botones, menús, confirmaciones) a archivos de traducción.
+- [x] Crear la traducción completa al Inglés.
+- [x] Añadir un selector de idioma en el panel de configuración (⚙️) para cambiar entre Inglés y Español en tiempo real.
 
 ## 🐛 4. Pulido Final y Quality Assurance (QA)
 - [ ] Revisión exhaustiva de rendimiento: Asegurarnos de que al subir una imagen 4K gigante no se congele el programa.
