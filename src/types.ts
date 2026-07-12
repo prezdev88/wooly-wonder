@@ -26,6 +26,7 @@ export interface Project {
 declare global {
   interface Window {
     electronAPI: {
+      getAppVersion: () => Promise<string>;
       getProjects: () => Promise<Project[]>;
       saveProject: (p: Project) => Promise<Project[]>;
       deleteProject: (id: string) => Promise<Project[]>;

@@ -21,6 +21,7 @@ function App() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState<ProjectImage | null>(null);
+  const [appVersion, setAppVersion] = useState<string>('');
   const [isDragging, setIsDragging] = useState(false);
   const [pastedFile, setPastedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -28,6 +29,9 @@ function App() {
   useEffect(() => {
     if (window.electronAPI) {
       window.electronAPI.getProjects().then(setProjects);
+      if (window.electronAPI.getAppVersion) {
+        window.electronAPI.getAppVersion().then(setAppVersion);
+      }
     }
   }, []);
 
@@ -421,6 +425,11 @@ function App() {
                   {t('app.english')}
                 </button>
               </div>
+              {appVersion && (
+                <div style={{ marginTop: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.75rem', letterSpacing: '0.5px' }}>
+                  v{appVersion}
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog, protocol, net, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
-
+const { autoUpdater } = require('electron-updater');
 const isDev = process.env.NODE_ENV === 'development';
 
 // Setup data directories
@@ -53,6 +53,11 @@ app.whenReady().then(() => {
 
   createWindow();
 
+  // Check for updates silently in the background
+  if (!isDev) {
+    autoUpdater.checkForUpdatesAndNotify();
+  }
+
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
@@ -63,6 +68,10 @@ app.on('window-all-closed', function () {
 });
 
 // IPC Handlers for Data Management
+ipcMain.handle('get-app-version', () => {
+  return app.getVersion();
+});
+
 ipcMain.handle('get-projects', () => {
   return JSON.parse(fs.readFileSync(dbPath, 'utf8')).projects;
 });
