@@ -578,8 +578,13 @@ function App() {
 
       {!activeImage && createPortal(
         <div className="mobile-fab-container">
-           <button className="fab-main" onClick={createProject} title={t('project.newProject')}>
-             ➕
+           <div className={`fab-menu ${showAppFab ? 'open' : ''}`}>
+             <button className="fab-pill" onClick={() => { createProject(); setShowAppFab(false); }} title={t('project.newProject')}>
+               <span className="fab-pill-text">{t('project.newProject')}</span>
+             </button>
+           </div>
+           <button className="fab-main" onClick={() => setShowAppFab(!showAppFab)}>
+             {showAppFab ? '✕' : '⋮'}
            </button>
         </div>,
         document.body
