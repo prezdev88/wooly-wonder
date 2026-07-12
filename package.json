@@ -44,9 +44,10 @@
   "build": {
     "appId": "com.prezdev.woolywonder",
     "productName": "Wooly Wonder",
-    "publish": [
-      "github"
-    ],
+    "publish": {
+      "provider": "github",
+      "releaseType": "release"
+    },
     "directories": {
       "output": "release"
     },
