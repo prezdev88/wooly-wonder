@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/prezdev88/wooly-wonder/compare/v1.1.0...v1.2.0) (2026-07-12)
+
+
+### Features
+
+* update Node.js version to 24 and modify publish configuration in package.json ([84c7aa3](https://github.com/prezdev88/wooly-wonder/commit/84c7aa3aed98d5e52921e6af3b710e23f229d94b))
+
 ## 1.1.0 (2026-07-12)
 
 
