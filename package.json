@@ -13,6 +13,7 @@
     "build:win": "vite build && electron-builder --win",
     "build:linux": "vite build && electron-builder --linux",
     "build:all": "vite build && electron-builder -mwl",
+    "release": "standard-version",
     "lint": "oxlint",
     "preview": "vite preview"
   },
@@ -33,6 +34,7 @@
     "electron": "^43.1.0",
     "electron-builder": "^26.15.3",
     "oxlint": "^1.71.0",
+    "standard-version": "^9.5.0",
     "typescript": "~6.0.2",
     "vite": "^8.1.1",
     "wait-on": "^9.0.10"
@@ -49,15 +51,23 @@
       "package.json"
     ],
     "mac": {
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "icon": "public/icons/icon.icns"
     },
     "win": {
-      "target": ["nsis", "portable"],
+      "target": [
+        "nsis",
+        "portable"
+      ],
       "icon": "public/icons/icon.ico"
     },
     "linux": {
-      "target": ["AppImage"],
+      "target": [
+        "AppImage"
+      ],
       "icon": "public/icons/1024x1024.png"
     }
   }
