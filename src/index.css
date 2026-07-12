@@ -474,7 +474,7 @@ canvas {
   .fab-menu {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: stretch;
     gap: 12px;
     opacity: 0;
     transform: translateY(20px);
@@ -488,27 +488,30 @@ canvas {
     pointer-events: auto;
   }
   
-  .fab-item-wrapper {
+  .fab-pill {
     display: flex;
     align-items: center;
+    justify-content: flex-start;
     gap: 12px;
-    justify-content: flex-end;
-  }
-
-  .fab-label {
     background: rgba(45, 45, 45, 0.95);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     color: var(--text-main);
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     border: 1px solid var(--panel-border);
+    padding: 12px 20px;
+    border-radius: 28px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: transform 0.2s;
   }
   
-  .fab-main, .fab-item {
+  .fab-pill-icon {
+    font-size: 1.2rem;
+  }
+  
+  .fab-main {
     width: 56px;
     height: 56px;
     border-radius: 50%;
@@ -520,26 +523,12 @@ canvas {
     box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     font-size: 1.5rem;
     transition: transform 0.2s;
-  }
-  
-  .fab-main {
     background: var(--accent);
     color: var(--bg-color);
   }
   
-  .fab-item {
-    background: rgba(45, 45, 45, 0.95);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    color: var(--text-main);
-    border: 1px solid var(--panel-border);
-    width: 48px;
-    height: 48px;
-    font-size: 1.2rem;
-  }
-  
-  .fab-main:active, .fab-item:active {
-    transform: scale(0.9);
+  .fab-main:active, .fab-pill:active {
+    transform: scale(0.95);
   }
 
   .canvas-wrapper {

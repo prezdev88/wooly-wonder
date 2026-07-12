@@ -910,25 +910,16 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
           <div className="mobile-fab-container">
              <div className={`fab-menu ${showFabMenu ? 'open' : ''}`}>
                {onCreateProject && (
-                 <div className="fab-item-wrapper">
-                   <span className="fab-label">{t('project.newProject')}</span>
-                   <button className="fab-item" onClick={() => { onCreateProject(); setShowFabMenu(false); }} title={t('project.newProject')}>
-                     ➕
-                   </button>
-                 </div>
+                 <button className="fab-pill" onClick={() => { onCreateProject(); setShowFabMenu(false); }} title={t('project.newProject')}>
+                   <span className="fab-pill-text">{t('project.newProject')}</span>
+                 </button>
                )}
-               <div className="fab-item-wrapper">
-                 <span className="fab-label">{t('pixelator.exportPdf')}</span>
-                 <button className="fab-item" onClick={() => { exportToPDF(); setShowFabMenu(false); }} title={t('pixelator.exportPdf')}>
-                   📄
-                 </button>
-               </div>
-               <div className="fab-item-wrapper">
-                 <span className="fab-label">{t('pixelator.knit')}</span>
-                 <button className="fab-item" onClick={() => { onUpdateCurrentRow?.(0); onSetFocus?.(true); setShowFabMenu(false); }} title={t('pixelator.knit')}>
-                   ▶
-                 </button>
-               </div>
+               <button className="fab-pill" onClick={() => { exportToPDF(); setShowFabMenu(false); }} title={t('pixelator.exportPdf')}>
+                 <span className="fab-pill-text">{t('pixelator.exportPdf')}</span>
+               </button>
+               <button className="fab-pill" onClick={() => { onUpdateCurrentRow?.(0); onSetFocus?.(true); setShowFabMenu(false); }} title={t('pixelator.knit')}>
+                 <span className="fab-pill-text">{t('pixelator.knit')}</span>
+               </button>
              </div>
              <button className="fab-main" onClick={() => setShowFabMenu(!showFabMenu)}>
                {showFabMenu ? '✕' : '⋮'}
