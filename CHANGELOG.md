@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://github.com/prezdev88/wooly-wonder/compare/v1.2.0...v1.3.0) (2026-07-12)
+
+
+### Features
+
+* remove macOS build option from release workflow ([7ca3035](https://github.com/prezdev88/wooly-wonder/commit/7ca30354d1f663ef092e5234b941145fb97be5ff))
+
 ## [1.2.0](https://github.com/prezdev88/wooly-wonder/compare/v1.1.0...v1.2.0) (2026-07-12)
 
 
