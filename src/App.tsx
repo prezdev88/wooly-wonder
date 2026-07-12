@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import ImagePixelator from './components/ImagePixelator'
 import type { Project, ProjectImage, SavedColor } from './types'
+import localforage from 'localforage'
 import './index.css'
 
 const THEMES = [
@@ -27,13 +28,43 @@ function App() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (window.electronAPI) {
-      window.electronAPI.getProjects().then(setProjects);
-      if (window.electronAPI.getAppVersion) {
-        window.electronAPI.getAppVersion().then(setAppVersion);
+    const fetchProjects = async () => {
+      if (window.electronAPI) {
+        const projs = await window.electronAPI.getProjects();
+        setProjects(projs);
+        if (window.electronAPI.getAppVersion) {
+          window.electronAPI.getAppVersion().then(setAppVersion);
+        }
+      } else {
+        const projs = (await localforage.getItem<Project[]>('projects')) || [];
+        setProjects(projs);
       }
-    }
+    };
+    fetchProjects();
   }, []);
+
+  const saveProjectData = async (project: Project) => {
+    if (window.electronAPI) {
+      return await window.electronAPI.saveProject(project);
+    } else {
+      let currentProjects = [...projects];
+      const idx = currentProjects.findIndex(p => p.id === project.id);
+      if (idx >= 0) currentProjects[idx] = project;
+      else currentProjects.push(project);
+      await localforage.setItem('projects', currentProjects);
+      return currentProjects;
+    }
+  };
+
+  const deleteProjectData = async (id: string) => {
+    if (window.electronAPI) {
+      return await window.electronAPI.deleteProject(id);
+    } else {
+      const newProjects = projects.filter(p => p.id !== id);
+      await localforage.setItem('projects', newProjects);
+      return newProjects;
+    }
+  };
 
   useEffect(() => {
     let accent, hover;
@@ -71,24 +102,20 @@ function App() {
       name: `${t('project.newProjectDefault')} ${projects.length + 1}`,
       images: []
     };
-    if (window.electronAPI) {
-      const updated = await window.electronAPI.saveProject(newProject);
-      setProjects(updated);
-      setActiveProjectId(newProject.id);
-      setActiveImage(null);
-    }
+    const updated = await saveProjectData(newProject);
+    setProjects(updated);
+    setActiveProjectId(newProject.id);
+    setActiveImage(null);
   };
 
   const deleteProject = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (window.confirm(t('project.confirmDeleteProject'))) {
-      if (window.electronAPI) {
-        const updated = await window.electronAPI.deleteProject(id);
-        setProjects(updated);
-        if (activeProjectId === id) {
-          setActiveProjectId(null);
-          setActiveImage(null);
-        }
+      const updated = await deleteProjectData(id);
+      setProjects(updated);
+      if (activeProjectId === id) {
+        setActiveProjectId(null);
+        setActiveImage(null);
       }
     }
   };
@@ -101,10 +128,8 @@ function App() {
         ...activeProject, 
         images: activeProject.images.filter(img => img.id !== imgId) 
       };
-      setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
-      if (window.electronAPI) {
-        await window.electronAPI.saveProject(updatedProject);
-      }
+      const updatedProjects = await saveProjectData(updatedProject);
+      setProjects(updatedProjects);
     }
   };
 
@@ -133,17 +158,15 @@ function App() {
 
     const updatedProject = { ...proj, images: [...proj.images, ...newImages] };
     
-    if (window.electronAPI) {
-      const updatedProjects = await window.electronAPI.saveProject(updatedProject);
-      setProjects(updatedProjects);
-      
-      if (targetProject) {
-        setActiveProjectId(targetProject.id);
-      }
-      
-      if (newImages.length === 1) {
-        setActiveImage(newImages[0]);
-      }
+    const updatedProjects = await saveProjectData(updatedProject);
+    setProjects(updatedProjects);
+    
+    if (targetProject) {
+      setActiveProjectId(targetProject.id);
+    }
+    
+    if (newImages.length === 1) {
+      setActiveImage(newImages[0]);
     }
   };
 
@@ -196,9 +219,7 @@ function App() {
     const updatedProject = { ...activeProject, name: e.target.value };
     // Optimistic update
     setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
-    if (window.electronAPI) {
-      await window.electronAPI.saveProject(updatedProject);
-    }
+    await saveProjectData(updatedProject);
   };
 
   const handleUpdatePalette = async (newPalette: SavedColor[]) => {
@@ -213,9 +234,7 @@ function App() {
     setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
     setActiveImage(updatedImage);
     
-    if (window.electronAPI) {
-      await window.electronAPI.saveProject(updatedProject);
-    }
+    await saveProjectData(updatedProject);
   };
 
   const handleUpdatePixelSize = async (newPixelSize: number) => {
@@ -230,9 +249,7 @@ function App() {
     setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
     setActiveImage(updatedImage);
     
-    if (window.electronAPI) {
-      await window.electronAPI.saveProject(updatedProject);
-    }
+    await saveProjectData(updatedProject);
   };
 
   const handleUpdateCurrentRow = (row: number | null) => {
@@ -245,9 +262,7 @@ function App() {
     const updatedProject = { ...activeProject, images: updatedImages };
     
     setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
-    if (window.electronAPI) {
-      window.electronAPI.saveProject(updatedProject);
-    }
+    saveProjectData(updatedProject);
     setActiveImage(updatedImage);
   };
 
@@ -261,9 +276,7 @@ function App() {
     const updatedProject = { ...activeProject, images: updatedImages };
     
     setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
-    if (window.electronAPI) {
-      await window.electronAPI.saveProject(updatedProject);
-    }
+    await saveProjectData(updatedProject);
     setActiveImage(updatedImage);
   };
 
