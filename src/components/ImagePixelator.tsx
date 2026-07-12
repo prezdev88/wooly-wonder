@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { jsPDF } from 'jspdf';
 import { useTranslation } from 'react-i18next';
 
@@ -32,6 +33,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
   const [imageDims, setImageDims] = useState({ width: 0, height: 0 });
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
   const touchStartRef = useRef<{ dist: number, zoom: number, x: number, y: number, panX: number, panY: number } | null>(null);
+  const [showFabMenu, setShowFabMenu] = useState(false);
   
   const [hoverColor, setHoverColor] = useState<{ hex: string; r: number; g: number; b: number } | null>(null);
   
@@ -855,7 +857,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
           </div>
         </div>
 
-        <div className="pixelator-actions" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="pixelator-actions desktop-only" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <button 
             onClick={exportToPDF}
             style={{ 
@@ -902,6 +904,30 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
             {t('pixelator.knit')}
           </button>
         </div>
+
+        {createPortal(
+          <div className="mobile-fab-container">
+             <div className={`fab-menu ${showFabMenu ? 'open' : ''}`}>
+               <div className="fab-item-wrapper">
+                 <span className="fab-label">{t('pixelator.exportPdf')}</span>
+                 <button className="fab-item" onClick={() => { exportToPDF(); setShowFabMenu(false); }} title={t('pixelator.exportPdf')}>
+                   📄
+                 </button>
+               </div>
+               <div className="fab-item-wrapper">
+                 <span className="fab-label">{t('pixelator.knit')}</span>
+                 <button className="fab-item" onClick={() => { onUpdateCurrentRow?.(0); onSetFocus?.(true); setShowFabMenu(false); }} title={t('pixelator.knit')}>
+                   ▶
+                 </button>
+               </div>
+             </div>
+             <button className="fab-main" onClick={() => setShowFabMenu(!showFabMenu)}>
+               {showFabMenu ? '✕' : '⋮'}
+             </button>
+          </div>,
+          document.body
+        )}
+
 
       </aside>
       )}

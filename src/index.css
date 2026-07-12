@@ -173,6 +173,11 @@ h1 { font-size: 1.5rem; letter-spacing: 0.5px; }
   gap: 16px;
   margin-top: 24px;
 }
+
+.mobile-fab-container {
+  display: none;
+}
+
 .gallery-item {
   aspect-ratio: 1;
   background: var(--panel-bg);
@@ -454,13 +459,87 @@ canvas {
     /* Quitamos el order: -1 para que la imagen aparezca primero */
   }
 
-  .pixelator-actions {
-    order: -1;
-    margin-top: 0;
-    margin-bottom: 24px;
+  .pixelator-actions.desktop-only {
+    display: none !important;
+  }
+  
+  .mobile-fab-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1000;
+    gap: 12px;
+  }
+  
+  .fab-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .fab-menu.open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  
+  .fab-item-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: flex-end;
   }
 
-
+  .fab-label {
+    background: var(--panel-bg);
+    color: var(--text-main);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    border: 1px solid var(--panel-border);
+  }
+  
+  .fab-main, .fab-item {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    font-size: 1.5rem;
+    transition: transform 0.2s;
+  }
+  
+  .fab-main {
+    background: var(--accent);
+    color: var(--bg-color);
+  }
+  
+  .fab-item {
+    background: var(--panel-bg);
+    color: var(--text-main);
+    border: 1px solid var(--panel-border);
+    width: 48px;
+    height: 48px;
+    font-size: 1.2rem;
+  }
+  
+  .fab-main:active, .fab-item:active {
+    transform: scale(0.9);
+  }
 
   .canvas-wrapper {
     min-height: 50vh;
