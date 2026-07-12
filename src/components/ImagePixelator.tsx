@@ -105,10 +105,15 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     if (!wrapper) return;
     
     updateSize(); // Initial measure
-    window.addEventListener('resize', updateSize);
+    
+    const resizeObserver = new ResizeObserver(() => {
+      updateSize();
+    });
+    
+    resizeObserver.observe(wrapper);
     
     return () => {
-      window.removeEventListener('resize', updateSize);
+      resizeObserver.disconnect();
     };
   }, []);
 
@@ -572,25 +577,10 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
 
   return (
     <div className="pixelator-container fade-in" style={{ gap: isFocusMode ? 0 : '20px' }}>
-      <div className="pixelator-main" style={{ position: 'relative' }}>
+      <div className={`pixelator-main ${isFocusMode ? 'focus-mode' : ''}`} style={{ position: 'relative' }}>
         
         {currentRow != null && (
-          <div style={{
-            position: 'absolute',
-            bottom: '30px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 200,
-            background: 'rgba(0,0,0,0.85)',
-            backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255,255,255,0.15)',
-            borderRadius: '40px',
-            padding: '12px 24px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '24px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
-          }}>
+          <div className="knitting-controls">
             <button 
               onClick={() => {
                 onUpdateCurrentRow?.(null);
@@ -664,7 +654,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
         )}
 
         <div 
-          className="canvas-wrapper" 
+          className={`canvas-wrapper ${isFocusMode ? 'focus-mode' : ''}`}
           ref={wrapperRef}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -677,8 +667,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
             cursor: isPanning ? 'grabbing' : 'auto',
             overflow: 'hidden',
             position: 'relative',
-            touchAction: isFocusMode ? 'none' : 'pan-y',
-            borderRadius: isFocusMode ? 'var(--radius)' : undefined
+            touchAction: isFocusMode ? 'none' : 'pan-y'
           }}
         >
           <canvas 
