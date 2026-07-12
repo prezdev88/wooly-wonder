@@ -27,13 +27,13 @@ body {
     radial-gradient(circle at 85% 30%, rgba(244, 162, 97, 0.04), transparent 25%);
   color: var(--text-main);
   min-height: 100vh;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 #root {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 /* Typography */
@@ -60,7 +60,6 @@ h1 { font-size: 1.5rem; letter-spacing: 0.5px; }
 .app-container {
   display: flex;
   flex: 1;
-  overflow: hidden;
 }
 
 /* Sidebar Layout */
@@ -133,7 +132,6 @@ h1 { font-size: 1.5rem; letter-spacing: 0.5px; }
   display: flex;
   flex-direction: column;
   padding: 40px;
-  overflow: hidden;
 }
 
 /* Upload Area */
@@ -256,7 +254,6 @@ h1 { font-size: 1.5rem; letter-spacing: 0.5px; }
   flex-direction: column;
   backdrop-filter: var(--glass-blur);
   flex-shrink: 0;
-  overflow: hidden;
 }
 
 .canvas-wrapper {
