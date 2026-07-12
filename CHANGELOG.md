@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-## 0.0.0 (2026-07-12)
+## 1.0.0 (2026-07-12)
 
 
 ### Features
@@ -46,3 +46,5 @@ All notable changes to this project will be documented in this file. See [standa
 ### Bug Fixes
 
 * remove unnecessary margin-top from pixelator sidebar ([0314aca](https://github.com/prezdev88/wooly-wonder/commit/0314aca1b472a47009af6e2dcf3c83ef03fced5d))
+
+
