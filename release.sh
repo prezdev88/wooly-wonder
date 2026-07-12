@@ -10,6 +10,8 @@ if [ "$1" == "win" ]; then
   npm run build:win
 elif [ "$1" == "linux" ]; then
   npm run build:linux
+elif [ "$1" == "win-linux" ]; then
+  npm run build:win-linux
 elif [ "$1" == "all" ]; then
   npm run build:all
 else
