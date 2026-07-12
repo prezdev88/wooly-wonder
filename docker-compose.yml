@@ -4,6 +4,6 @@ services:
   wooly-wonder-web:
     build: .
     ports:
-      - "8080:80"
+      - "8083:80"
     restart: unless-stopped
     container_name: wooly-wonder-web
