@@ -1,7 +1,7 @@
 {
   "name": "pixel-it",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "repository": "https://github.com/prezdev88/wooly-wonder",
   "type": "module",
   "main": "electron/main.cjs",
@@ -44,7 +44,9 @@
   "build": {
     "appId": "com.prezdev.woolywonder",
     "productName": "Wooly Wonder",
-    "publish": ["github"],
+    "publish": [
+      "github"
+    ],
     "directories": {
       "output": "release"
     },
