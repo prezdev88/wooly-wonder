@@ -296,20 +296,24 @@ function App() {
           >
             🎨
           </button>
-          <button 
-            onClick={() => window.electronAPI.minimizeApp()}
-            style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer', fontSize: '1.2rem', padding: '0 8px', opacity: 0.7 }}
-            title={t('app.minimize')}
-          >
-            —
-          </button>
-          <button 
-            onClick={() => window.electronAPI.closeApp()}
-            style={{ background: 'transparent', border: 'none', color: '#ff5f56', cursor: 'pointer', fontSize: '1.2rem', padding: '0 8px', fontWeight: 'bold' }}
-            title={t('app.close')}
-          >
-            ✕
-          </button>
+          {window.electronAPI && (
+            <>
+              <button 
+                onClick={() => window.electronAPI.minimizeApp()}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer', fontSize: '1.2rem', padding: '0 8px', opacity: 0.7 }}
+                title={t('app.minimize')}
+              >
+                —
+              </button>
+              <button 
+                onClick={() => window.electronAPI.closeApp()}
+                style={{ background: 'transparent', border: 'none', color: '#ff5f56', cursor: 'pointer', fontSize: '1.2rem', padding: '0 8px', fontWeight: 'bold' }}
+                title={t('app.close')}
+              >
+                ✕
+              </button>
+            </>
+          )}
           
           {showSettings && (
             <div style={{

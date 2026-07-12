@@ -389,3 +389,37 @@ canvas {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
+
+/* Responsive adjustments for Web/Mobile */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  
+  .sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 40vh;
+    border-right: none;
+    border-bottom: 1px solid var(--panel-border);
+  }
+  
+  .main-content {
+    padding: 20px;
+    min-height: 60vh;
+  }
+  
+  .pixelator-container {
+    flex-direction: column;
+  }
+  
+  .pixelator-sidebar {
+    width: 100%;
+    order: -1; /* Mueve los controles arriba en móvil */
+  }
+
+  .canvas-wrapper {
+    min-height: 300px;
+  }
+}
