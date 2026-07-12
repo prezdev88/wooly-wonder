@@ -254,6 +254,21 @@ function App() {
     await saveProjectData(updatedProject);
   };
 
+  const handleUpdatePixelSizeLocked = async (isLocked: boolean) => {
+    if (!activeProject || !activeImage) return;
+    
+    const updatedImage = { ...activeImage, isPixelSizeLocked: isLocked };
+    const updatedProject = { 
+      ...activeProject, 
+      images: activeProject.images.map(img => img.id === activeImage.id ? updatedImage : img) 
+    };
+    
+    setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
+    setActiveImage(updatedImage);
+    
+    await saveProjectData(updatedProject);
+  };
+
   const handleUpdateCurrentRow = (row: number | null) => {
     if (!activeProject || !activeImage) return;
     
@@ -501,6 +516,8 @@ function App() {
                 onUpdatePalette={handleUpdatePalette}
                 initialPixelSize={activeImage.pixelSize}
                 onUpdatePixelSize={handleUpdatePixelSize}
+                isPixelSizeLocked={activeImage.isPixelSizeLocked}
+                onUpdatePixelSizeLocked={handleUpdatePixelSizeLocked}
                 currentRow={activeImage.currentRow}
                 onUpdateCurrentRow={handleUpdateCurrentRow}
                 markedPixel={activeImage.markedPixel}

@@ -4,6 +4,7 @@ export interface ProjectImage {
   filename: string;
   palette?: SavedColor[];
   pixelSize?: number;
+  isPixelSizeLocked?: boolean;
   currentRow?: number | null;
   markedPixel?: { x: number, y: number } | null;
 }

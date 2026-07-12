@@ -11,6 +11,8 @@ interface Props {
   onUpdatePalette: (palette: SavedColor[]) => void;
   initialPixelSize?: number;
   onUpdatePixelSize?: (size: number) => void;
+  isPixelSizeLocked?: boolean;
+  onUpdatePixelSizeLocked?: (isLocked: boolean) => void;
   currentRow?: number | null;
   onUpdateCurrentRow?: (row: number | null) => void;
   markedPixel?: { x: number, y: number } | null;
@@ -21,7 +23,7 @@ interface Props {
   onCreateProject?: () => void;
 }
 
-export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, currentRow = null, onUpdateCurrentRow, markedPixel = null, onUpdateMarkedPixel, isFocusMode = false, onSetFocus, projectName = 'Proyecto sin título', onCreateProject }: Props) {
+export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, isPixelSizeLocked = false, onUpdatePixelSizeLocked, currentRow = null, onUpdateCurrentRow, markedPixel = null, onUpdateMarkedPixel, isFocusMode = false, onSetFocus, projectName = 'Proyecto sin título', onCreateProject }: Props) {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -35,6 +37,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
   const touchStartRef = useRef<{ dist: number, zoom: number, x: number, y: number, panX: number, panY: number } | null>(null);
   const [showFabMenu, setShowFabMenu] = useState(false);
+  
   
   const [hoverColor, setHoverColor] = useState<{ hex: string; r: number; g: number; b: number } | null>(null);
   
@@ -832,7 +835,31 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
           gap: '8px'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-main)' }}>{t('pixelator.resolution')}</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-main)' }}>{t('pixelator.resolution')}</h3>
+              <button
+                onClick={() => onUpdatePixelSizeLocked?.(!isPixelSizeLocked)}
+                disabled={currentRow != null}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: currentRow != null ? 'not-allowed' : 'pointer',
+                  fontSize: '1.2rem',
+                  padding: '0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: currentRow != null ? 0.5 : 1,
+                  transition: 'transform 0.2s',
+                }}
+                onMouseDown={e => e.currentTarget.style.transform = 'scale(0.8)'}
+                onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                title={isPixelSizeLocked ? 'Desbloquear tamaño' : 'Bloquear tamaño'}
+              >
+                {isPixelSizeLocked ? '🔒' : '🔓'}
+              </button>
+            </div>
             <span className="dimensions" style={{ padding: '4px 10px', fontSize: '0.8rem' }}>
               {imageDims.width} x {imageDims.height} pts
             </span>
@@ -844,12 +871,13 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
             value={pixelSize} 
             onChange={handleSliderChange}
             onPointerUp={handleSliderRelease}
-            disabled={currentRow != null}
+            disabled={currentRow != null || isPixelSizeLocked}
             className="slider"
             style={{ 
               margin: '12px 0 4px 0', 
-              opacity: currentRow != null ? 0.5 : 1,
-              cursor: currentRow != null ? 'not-allowed' : 'pointer'
+              opacity: (currentRow != null || isPixelSizeLocked) ? 0.5 : 1,
+              cursor: (currentRow != null || isPixelSizeLocked) ? 'not-allowed' : 'pointer',
+              width: '100%'
             }}
           />
           <div className="slider-labels" style={{ fontSize: '0.75rem' }}>
