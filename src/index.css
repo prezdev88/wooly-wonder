@@ -456,7 +456,7 @@ canvas {
     /* Quitamos el order: -1 para que la imagen aparezca primero */
   }
 
-  .pixelator-actions.desktop-only {
+  .desktop-only {
     display: none !important;
   }
   
@@ -496,7 +496,9 @@ canvas {
   }
 
   .fab-label {
-    background: var(--panel-bg);
+    background: rgba(45, 45, 45, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     color: var(--text-main);
     padding: 6px 12px;
     border-radius: 8px;
@@ -526,7 +528,9 @@ canvas {
   }
   
   .fab-item {
-    background: var(--panel-bg);
+    background: rgba(45, 45, 45, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     color: var(--text-main);
     border: 1px solid var(--panel-border);
     width: 48px;

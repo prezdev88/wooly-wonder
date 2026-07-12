@@ -18,9 +18,10 @@ interface Props {
   isFocusMode?: boolean;
   onSetFocus?: (focus: boolean) => void;
   projectName?: string;
+  onCreateProject?: () => void;
 }
 
-export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, currentRow = null, onUpdateCurrentRow, markedPixel = null, onUpdateMarkedPixel, isFocusMode = false, onSetFocus, projectName = 'Proyecto sin título' }: Props) {
+export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, currentRow = null, onUpdateCurrentRow, markedPixel = null, onUpdateMarkedPixel, isFocusMode = false, onSetFocus, projectName = 'Proyecto sin título', onCreateProject }: Props) {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -908,6 +909,14 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
         {createPortal(
           <div className="mobile-fab-container">
              <div className={`fab-menu ${showFabMenu ? 'open' : ''}`}>
+               {onCreateProject && (
+                 <div className="fab-item-wrapper">
+                   <span className="fab-label">{t('project.newProject')}</span>
+                   <button className="fab-item" onClick={() => { onCreateProject(); setShowFabMenu(false); }} title={t('project.newProject')}>
+                     ➕
+                   </button>
+                 </div>
+               )}
                <div className="fab-item-wrapper">
                  <span className="fab-label">{t('pixelator.exportPdf')}</span>
                  <button className="fab-item" onClick={() => { exportToPDF(); setShowFabMenu(false); }} title={t('pixelator.exportPdf')}>

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import ImagePixelator from './components/ImagePixelator'
 import type { Project, ProjectImage, SavedColor } from './types'
@@ -25,6 +26,7 @@ function App() {
   const [appVersion, setAppVersion] = useState<string>('');
   const [isDragging, setIsDragging] = useState(false);
   const [pastedFile, setPastedFile] = useState<File | null>(null);
+  const [showAppFab, setShowAppFab] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -456,7 +458,7 @@ function App() {
       <div className="app-container">
         {!isFocusMode && (
           <aside className="sidebar">
-            <div className="sidebar-header">
+            <div className="sidebar-header desktop-only">
               <button className="new-btn" onClick={createProject}>{t('project.newProject')}</button>
             </div>
           <div className="project-list">
@@ -506,6 +508,7 @@ function App() {
                 isFocusMode={isFocusMode}
                 onSetFocus={setIsFocusMode}
                 projectName={activeProject.name || t('project.untitledProject')}
+                onCreateProject={createProject}
               />
             </div>
           ) : (
@@ -572,6 +575,23 @@ function App() {
           )}
         </main>
       </div>
+
+      {!activeImage && createPortal(
+        <div className="mobile-fab-container">
+           <div className={`fab-menu ${showAppFab ? 'open' : ''}`}>
+             <div className="fab-item-wrapper">
+               <span className="fab-label">{t('project.newProject')}</span>
+               <button className="fab-item" onClick={() => { createProject(); setShowAppFab(false); }} title={t('project.newProject')}>
+                 ➕
+               </button>
+             </div>
+           </div>
+           <button className="fab-main" onClick={() => setShowAppFab(!showAppFab)}>
+             {showAppFab ? '✕' : '⋮'}
+           </button>
+        </div>,
+        document.body
+      )}
 
       {pastedFile && (
         <div style={{
