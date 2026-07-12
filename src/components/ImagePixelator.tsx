@@ -855,7 +855,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
           </div>
         </div>
 
-        <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="pixelator-actions" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <button 
             onClick={exportToPDF}
             style={{ 

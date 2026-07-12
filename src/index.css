@@ -339,20 +339,7 @@ canvas {
   color: var(--text-muted);
 }
 
-.back-btn {
-  background: transparent;
-  border: 1px solid var(--panel-border);
-  color: var(--text-main);
-  padding: 8px 16px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: fit-content;
-}
-.back-btn:hover { background: rgba(255,255,255,0.05); }
+
 
 /* Animations */
 @keyframes fadeIn {
@@ -466,6 +453,14 @@ canvas {
     width: 100%;
     /* Quitamos el order: -1 para que la imagen aparezca primero */
   }
+
+  .pixelator-actions {
+    order: -1;
+    margin-top: 0;
+    margin-bottom: 24px;
+  }
+
+
 
   .canvas-wrapper {
     min-height: 50vh;

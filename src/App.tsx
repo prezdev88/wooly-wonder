@@ -491,11 +491,7 @@ function App() {
             </div>
           ) : activeImage ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: isFocusMode ? '0' : '20px', height: '100%' }}>
-              {!isFocusMode && (
-                <button className="back-btn" onClick={() => setActiveImage(null)}>
-                  {t('project.backTo')}{activeProject.name}
-                </button>
-              )}
+
               <ImagePixelator 
                 key={activeImage.id}
                 imageUrl={activeImage.url} 
