@@ -31,6 +31,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
   const panStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const [imageDims, setImageDims] = useState({ width: 0, height: 0 });
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
+  const touchStartRef = useRef<{ dist: number, zoom: number, x: number, y: number, panX: number, panY: number } | null>(null);
   
   const [hoverColor, setHoverColor] = useState<{ hex: string; r: number; g: number; b: number } | null>(null);
   
@@ -335,6 +336,62 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     }
   };
 
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      
+      touchStartRef.current = { dist, zoom: viewState.zoom, x: centerX, y: centerY, panX: viewState.panX, panY: viewState.panY };
+    } else if (e.touches.length === 1 && isFocusMode) {
+      setIsPanning(true);
+      panStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, panX: viewState.panX, panY: viewState.panY };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2 && touchStartRef.current) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      
+      const zoomFactor = dist / touchStartRef.current.dist;
+      const newZoom = Math.max(0.1, touchStartRef.current.zoom * zoomFactor);
+      
+      const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      
+      if (!wrapperRef.current) return;
+      const rect = wrapperRef.current.getBoundingClientRect();
+      const wrapperCenterX = rect.left + rect.width / 2;
+      const wrapperCenterY = rect.top + rect.height / 2;
+
+      const F = newZoom / touchStartRef.current.zoom;
+      const distToCenterX = touchStartRef.current.x - (wrapperCenterX + touchStartRef.current.panX);
+      const distToCenterY = touchStartRef.current.y - (wrapperCenterY + touchStartRef.current.panY);
+      
+      const dragX = centerX - touchStartRef.current.x;
+      const dragY = centerY - touchStartRef.current.y;
+      
+      setViewState({
+        zoom: newZoom,
+        panX: touchStartRef.current.x - wrapperCenterX - distToCenterX * F + dragX,
+        panY: touchStartRef.current.y - wrapperCenterY - distToCenterY * F + dragY
+      });
+    } else if (e.touches.length === 1 && isFocusMode && isPanning) {
+      const dx = e.touches[0].clientX - panStartRef.current.x;
+      const dy = e.touches[0].clientY - panStartRef.current.y;
+      setViewState(prev => ({ ...prev, panX: panStartRef.current.panX + dx, panY: panStartRef.current.panY + dy }));
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length < 2) touchStartRef.current = null;
+    if (e.touches.length === 0) setIsPanning(false);
+  };
+
   const handleCanvasClick = (e: React.MouseEvent) => {
     // Only register click for palette on left click
     if (e.button !== 0) return;
@@ -612,12 +669,15 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
           onMouseDown={(e) => { if (e.button === 1) e.preventDefault(); }}
           style={{ 
             cursor: isPanning ? 'grabbing' : 'auto',
             overflow: 'hidden',
             position: 'relative',
-            touchAction: 'none',
+            touchAction: isFocusMode ? 'none' : 'pan-y',
             borderRadius: isFocusMode ? 'var(--radius)' : undefined
           }}
         >

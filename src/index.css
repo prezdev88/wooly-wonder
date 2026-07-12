@@ -392,15 +392,21 @@ canvas {
 
 /* Responsive adjustments for Web/Mobile */
 @media (max-width: 768px) {
+  body, #root {
+    overflow: auto;
+    height: auto;
+    min-height: 100vh;
+  }
+
   .app-container {
     flex-direction: column;
-    overflow-y: auto;
+    overflow: visible;
   }
   
   .sidebar {
     width: 100%;
     height: auto;
-    max-height: 40vh;
+    max-height: none;
     border-right: none;
     border-bottom: 1px solid var(--panel-border);
   }
@@ -408,6 +414,7 @@ canvas {
   .main-content {
     padding: 20px;
     min-height: 60vh;
+    overflow: visible;
   }
   
   .pixelator-container {
@@ -416,10 +423,11 @@ canvas {
   
   .pixelator-sidebar {
     width: 100%;
-    order: -1; /* Mueve los controles arriba en móvil */
+    /* Quitamos el order: -1 para que la imagen aparezca primero */
   }
 
   .canvas-wrapper {
-    min-height: 300px;
+    min-height: 50vh;
+    width: 100%;
   }
 }
