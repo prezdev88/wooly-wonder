@@ -10,6 +10,9 @@
     "start": "concurrently -k \"npm run dev\" \"wait-on tcp:5173 && npm run dev:electron\"",
     "build": "tsc -b && vite build",
     "build:electron": "vite build && electron-builder",
+    "build:win": "vite build && electron-builder --win",
+    "build:linux": "vite build && electron-builder --linux",
+    "build:all": "vite build && electron-builder -mwl",
     "lint": "oxlint",
     "preview": "vite preview"
   },
@@ -33,5 +36,29 @@
     "typescript": "~6.0.2",
     "vite": "^8.1.1",
     "wait-on": "^9.0.10"
+  },
+  "build": {
+    "appId": "com.prezdev.woolywonder",
+    "productName": "Wooly Wonder",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": ["dmg", "zip"],
+      "icon": "public/icons/icon.icns"
+    },
+    "win": {
+      "target": ["nsis", "portable"],
+      "icon": "public/icons/icon.ico"
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "icon": "public/icons/1024x1024.png"
+    }
   }
 }

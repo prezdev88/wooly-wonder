@@ -3,9 +3,9 @@
 Esta es nuestra hoja de ruta (roadmap) para llevar la aplicación desde su estado actual hasta un producto comercial completo, listo para ser vendido en plataformas como Steam o itch.io.
 
 ## 📦 1. Empaquetado y Distribución Profesional
-- [ ] Configurar `electron-builder` en el `package.json` para generar ejecutables limpios y optimizados.
-- [ ] Crear y configurar el ícono oficial de la aplicación (en formatos `.ico`, `.icns` y `.png`).
-- [ ] Asegurarnos de que el ejecutable funcione correctamente como un programa independiente (standalone app) sin requerir comandos de desarrollo.
+- [x] Configurar `electron-builder` en el `package.json` para generar ejecutables limpios y optimizados.
+- [x] Crear y configurar el ícono oficial de la aplicación (en formatos `.ico`, `.icns` y `.png`).
+- [x] Asegurarnos de que el ejecutable funcione correctamente como un programa independiente (standalone app) sin requerir comandos de desarrollo.
 - [ ] (Opcional) Integrar `steamworks.js` si deseamos guardar los proyectos directamente en Steam Cloud.
 
 ## 🖨️ 2. Exportación de Patrones
