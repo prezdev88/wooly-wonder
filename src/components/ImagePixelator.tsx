@@ -22,9 +22,11 @@ interface Props {
   projectName?: string;
   onCreateProject?: () => void;
   onUpdateImageUrl?: (newUrl: string) => void;
+  completedSegments?: Record<number, number[]>;
+  onUpdateCompletedSegments?: (segments: Record<number, number[]>) => void;
 }
 
-export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, isPixelSizeLocked = false, onUpdatePixelSizeLocked, currentRow = null, onUpdateCurrentRow, markedPixel = null, onUpdateMarkedPixel, isFocusMode = false, onSetFocus, projectName = 'Proyecto sin título', onCreateProject, onUpdateImageUrl }: Props) {
+export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, isPixelSizeLocked = false, onUpdatePixelSizeLocked, currentRow = null, onUpdateCurrentRow, markedPixel = null, onUpdateMarkedPixel, isFocusMode = false, onSetFocus, projectName = 'Proyecto sin título', onCreateProject, onUpdateImageUrl, completedSegments = {}, onUpdateCompletedSegments }: Props) {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -41,7 +43,8 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
   
   
   const [hoverColor, setHoverColor] = useState<{ hex: string; r: number; g: number; b: number } | null>(null);
-  const [currentRowColors, setCurrentRowColors] = useState<{hex: string, count: number}[]>([]);
+  const [currentRowColors, setCurrentRowColors] = useState<{hex: string, count: number, startX: number, endX: number}[]>([]);
+  const [selectedSegmentIdx, setSelectedSegmentIdx] = useState<number | null>(null);
   const [panelZoom, setPanelZoom] = useState(1);
   const panelTouchStartRef = useRef<{ dist: number, zoom: number } | null>(null);
   
@@ -69,10 +72,21 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
   }, [imageUrl]);
 
   useEffect(() => {
+    setSelectedSegmentIdx(null);
+  }, [currentRow]);
+
+  useEffect(() => {
     if (originalImage) {
-      drawPixelated(originalImage, pixelSize, currentRow ?? null, markedPixel ?? null);
+      drawPixelated(
+        originalImage, 
+        pixelSize, 
+        currentRow ?? null, 
+        markedPixel ?? null, 
+        selectedSegmentIdx, 
+        completedSegments
+      );
     }
-  }, [originalImage, pixelSize, currentRow, markedPixel]);
+  }, [originalImage, pixelSize, currentRow, markedPixel, selectedSegmentIdx, completedSegments]);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -127,7 +141,14 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     };
   }, []);
 
-  const drawPixelated = (img: HTMLImageElement, pointsWide: number, rowToHighlight: number | null = null, pixelToMark: {x: number, y: number} | null = null) => {
+  const drawPixelated = (
+    img: HTMLImageElement, 
+    pointsWide: number, 
+    rowToHighlight: number | null = null, 
+    pixelToMark: {x: number, y: number} | null = null,
+    activeSegmentIdx: number | null = null,
+    allCompletedSegments: Record<number, number[]> = {}
+  ) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -239,9 +260,10 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
          ctx.strokeRect(0, rowToHighlight * rectHeight, canvas.width, rectHeight);
 
          // Calculate color sequence for the current row
-         const sequence: { hex: string, count: number }[] = [];
+         const sequence: { hex: string, count: number, startX: number, endX: number }[] = [];
          let lastHex = '';
          let count = 0;
+         let startX = 0;
          
          for (let x = 0; x < pointsWide; x++) {
            const i = (rowToHighlight * pointsWide + x) * 4;
@@ -253,14 +275,80 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
            if (hex === lastHex) {
              count++;
            } else {
-             if (count > 0) sequence.push({ hex: lastHex, count });
+             if (count > 0) sequence.push({ hex: lastHex, count, startX, endX: x - 1 });
              lastHex = hex;
              count = 1;
+             startX = x;
            }
          }
-         if (count > 0) sequence.push({ hex: lastHex, count });
+         if (count > 0) sequence.push({ hex: lastHex, count, startX, endX: pointsWide - 1 });
          
          setTimeout(() => setCurrentRowColors(sequence), 0);
+
+         // Draw overlays for selected segment
+         sequence.forEach((seg, idx) => {
+           const isActive = activeSegmentIdx === idx;
+           
+           if (isActive) {
+             const pxX = seg.startX * rectWidth;
+             const pxY = rowToHighlight * rectHeight;
+             const width = (seg.endX - seg.startX + 1) * rectWidth;
+             
+             ctx.strokeStyle = '#00FF00';
+             ctx.lineWidth = Math.max(3, scaleRatio * 3);
+             ctx.strokeRect(pxX, pxY, width, rectHeight);
+             
+             ctx.fillStyle = 'rgba(0, 255, 0, 0.2)';
+             ctx.fillRect(pxX, pxY, width, rectHeight);
+           }
+         });
+
+         // Draw completed segments for ALL rows
+         Object.entries(allCompletedSegments).forEach(([rowStr, indices]) => {
+           const row = parseInt(rowStr);
+           if (indices.length === 0) return;
+           if (row < 0 || row >= pointsHigh) return;
+           
+           const rowSequence: { startX: number, endX: number }[] = [];
+           let lastHex = '';
+           let count = 0;
+           let startX = 0;
+           for (let x = 0; x < pointsWide; x++) {
+             const i = (row * pointsWide + x) * 4;
+             const hex = '#' + [imgData.data[i], imgData.data[i+1], imgData.data[i+2]].map(v => v.toString(16).padStart(2, '0')).join('').toUpperCase();
+             if (hex === lastHex) {
+               count++;
+             } else {
+               if (count > 0) rowSequence.push({ startX, endX: x - 1 });
+               lastHex = hex;
+               count = 1;
+               startX = x;
+             }
+           }
+           if (count > 0) rowSequence.push({ startX, endX: pointsWide - 1 });
+           
+           indices.forEach(idx => {
+             const seg = rowSequence[idx];
+             if (!seg) return;
+             
+             ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+             ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+             ctx.lineWidth = Math.max(1, scaleRatio * 1.5);
+             
+             for (let x = seg.startX; x <= seg.endX; x++) {
+               const pxX = x * rectWidth;
+               const pxY = row * rectHeight;
+               
+               ctx.fillRect(pxX, pxY, rectWidth, rectHeight);
+               ctx.beginPath();
+               ctx.moveTo(pxX, pxY);
+               ctx.lineTo(pxX + rectWidth, pxY + rectHeight);
+               ctx.moveTo(pxX + rectWidth, pxY);
+               ctx.lineTo(pxX, pxY + rectHeight);
+               ctx.stroke();
+             }
+           });
+         });
        }
        
        // Draw Marked Pixel
@@ -743,12 +831,38 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
             {currentRowColors.map((item, idx) => {
               const matchedColor = palette.find(c => c.hex === item.hex);
               const label = matchedColor?.name || item.hex;
+              const isCompleted = completedSegments[currentRow ?? -1]?.includes(idx);
+              const isActive = selectedSegmentIdx === idx;
               return (
-                <div key={idx} className="color-item" style={{
-                  padding: `${6 * panelZoom}px ${10 * panelZoom}px`,
-                  gap: `${8 * panelZoom}px`,
-                  borderRadius: `${8 * panelZoom}px`
-                }}>
+                <div 
+                  key={idx} 
+                  className="color-item" 
+                  onClick={() => setSelectedSegmentIdx(isActive ? null : idx)}
+                  onDoubleClick={() => {
+                    const current = completedSegments[currentRow ?? -1] || [];
+                    let newCurrent;
+                    if (current.includes(idx)) {
+                      newCurrent = current.filter(i => i !== idx);
+                    } else {
+                      newCurrent = [...current, idx];
+                    }
+                    if (onUpdateCompletedSegments) {
+                      onUpdateCompletedSegments({
+                        ...completedSegments,
+                        [currentRow ?? -1]: newCurrent
+                      });
+                    }
+                  }}
+                  style={{
+                    padding: `${6 * panelZoom}px ${10 * panelZoom}px`,
+                    gap: `${8 * panelZoom}px`,
+                    borderRadius: `${8 * panelZoom}px`,
+                    background: isActive ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0,0,0,0.2)',
+                    opacity: isCompleted ? 0.3 : 1,
+                    border: isActive ? '1px solid #00FF00' : '1px solid transparent',
+                    cursor: 'pointer',
+                    userSelect: 'none'
+                  }}>
                   <div style={{ width: `${18 * panelZoom}px`, height: `${18 * panelZoom}px`, borderRadius: `${4 * panelZoom}px`, background: item.hex, border: '1px solid rgba(255,255,255,0.2)' }}></div>
                   <span style={{ color: 'var(--text-main)', fontSize: `${1 * panelZoom}rem`, fontWeight: 600, minWidth: `${30 * panelZoom}px` }}>{item.count}x</span>
                   <span style={{ color: 'var(--text-muted)', fontSize: `${0.9 * panelZoom}rem`, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>

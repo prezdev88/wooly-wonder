@@ -254,6 +254,18 @@ function App() {
     await saveProjectData(updatedProject);
   };
 
+  const handleUpdateCompletedSegments = async (segments: Record<number, number[]>) => {
+    if (!activeProject || !activeImage) return;
+    const updatedImage = { ...activeImage, completedSegments: segments };
+    const updatedProject = {
+      ...activeProject,
+      images: activeProject.images.map(img => img.id === activeImage.id ? updatedImage : img)
+    };
+    const updatedProjects = await saveProjectData(updatedProject);
+    setProjects(updatedProjects);
+    setActiveImage(updatedImage);
+  };
+
   const handleUpdatePixelSize = async (newPixelSize: number) => {
     if (!activeProject || !activeImage) return;
     
@@ -537,6 +549,8 @@ function App() {
                 onUpdateCurrentRow={handleUpdateCurrentRow}
                 markedPixel={activeImage.markedPixel}
                 onUpdateMarkedPixel={handleUpdateMarkedPixel}
+                completedSegments={activeImage.completedSegments}
+                onUpdateCompletedSegments={handleUpdateCompletedSegments}
                 isFocusMode={isFocusMode}
                 onSetFocus={setIsFocusMode}
                 projectName={activeProject.name || t('project.untitledProject')}
