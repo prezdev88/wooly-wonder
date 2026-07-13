@@ -55,6 +55,8 @@
     "generatedBy": "Generado por Wooly Wonder",
     "paletteSubtitle": "Paleta de Colores",
     "noColorsSaved": "(Sin colores guardados)",
-    "pdfSaved": "✅ Tu patrón se guardó como {{filename}}"
+    "pdfSaved": "✅ Tu patrón se guardó como {{filename}}",
+    "crop": "✂️ Recortar",
+    "confirmCrop": "¿Estás seguro de que deseas recortar la imagen a la vista actual?"
   }
 }

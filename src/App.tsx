@@ -239,6 +239,21 @@ function App() {
     await saveProjectData(updatedProject);
   };
 
+  const handleUpdateImageUrl = async (newUrl: string) => {
+    if (!activeProject || !activeImage) return;
+    
+    const updatedImage = { ...activeImage, url: newUrl };
+    const updatedProject = { 
+      ...activeProject, 
+      images: activeProject.images.map(img => img.id === activeImage.id ? updatedImage : img) 
+    };
+    
+    setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
+    setActiveImage(updatedImage);
+    
+    await saveProjectData(updatedProject);
+  };
+
   const handleUpdatePixelSize = async (newPixelSize: number) => {
     if (!activeProject || !activeImage) return;
     
@@ -526,6 +541,7 @@ function App() {
                 onSetFocus={setIsFocusMode}
                 projectName={activeProject.name || t('project.untitledProject')}
                 onCreateProject={createProject}
+                onUpdateImageUrl={handleUpdateImageUrl}
               />
             </div>
           ) : (

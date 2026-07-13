@@ -21,9 +21,10 @@ interface Props {
   onSetFocus?: (focus: boolean) => void;
   projectName?: string;
   onCreateProject?: () => void;
+  onUpdateImageUrl?: (newUrl: string) => void;
 }
 
-export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, isPixelSizeLocked = false, onUpdatePixelSizeLocked, currentRow = null, onUpdateCurrentRow, markedPixel = null, onUpdateMarkedPixel, isFocusMode = false, onSetFocus, projectName = 'Proyecto sin título', onCreateProject }: Props) {
+export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, isPixelSizeLocked = false, onUpdatePixelSizeLocked, currentRow = null, onUpdateCurrentRow, markedPixel = null, onUpdateMarkedPixel, isFocusMode = false, onSetFocus, projectName = 'Proyecto sin título', onCreateProject, onUpdateImageUrl }: Props) {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -581,6 +582,54 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     }
   }
 
+  const handleCrop = () => {
+    if (!originalImage || !canvasRef.current || !onUpdateImageUrl) return;
+    if (window.confirm(t('pixelator.confirmCrop'))) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const wrapperRect = wrapperRef.current?.getBoundingClientRect();
+      if (!wrapperRect) return;
+
+      const imgWidth = originalImage.width;
+      const imgHeight = originalImage.height;
+      
+      const scaleX = imgWidth / fitWidth;
+      const scaleY = imgHeight / fitHeight;
+
+      const wrapperWidth = wrapperRect.width;
+      const wrapperHeight = wrapperRect.height;
+      
+      const x0 = wrapperWidth / 2 + viewState.panX - (fitWidth * viewState.zoom) / 2;
+      const y0 = wrapperHeight / 2 + viewState.panY - (fitHeight * viewState.zoom) / 2;
+      
+      let cropX = (-x0 / viewState.zoom) * scaleX;
+      let cropY = (-y0 / viewState.zoom) * scaleY;
+      let cropW = (wrapperWidth / viewState.zoom) * scaleX;
+      let cropH = (wrapperHeight / viewState.zoom) * scaleY;
+      
+      const startX = Math.max(0, cropX);
+      const startY = Math.max(0, cropY);
+      const endX = Math.min(imgWidth, cropX + cropW);
+      const endY = Math.min(imgHeight, cropY + cropH);
+      
+      const finalW = endX - startX;
+      const finalH = endY - startY;
+      
+      if (finalW <= 0 || finalH <= 0) return;
+      
+      canvas.width = finalW;
+      canvas.height = finalH;
+      
+      ctx.drawImage(originalImage, startX, startY, finalW, finalH, 0, 0, finalW, finalH);
+      const newUrl = canvas.toDataURL('image/png');
+      
+      setViewState({ zoom: 1, panX: 0, panY: 0 });
+      onUpdateImageUrl(newUrl);
+    }
+  };
+
   return (
     <div className="pixelator-container fade-in" style={{ gap: isFocusMode ? 0 : '20px' }}>
       <div className={`pixelator-main ${isFocusMode ? 'focus-mode' : ''}`} style={{ position: 'relative' }}>
@@ -656,6 +705,34 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
             title={isFocusMode ? t('pixelator.exitFocusMode') : t('pixelator.enterFocusMode')}
           >
             {isFocusMode ? '⤡' : '⤢'}
+          </button>
+        )}
+
+        {viewState.zoom > 1.01 && currentRow == null && (
+          <button 
+            onClick={handleCrop}
+            style={{
+              position: 'absolute',
+              top: onSetFocus ? 60 : 16,
+              right: 16,
+              zIndex: 100,
+              background: 'var(--accent)',
+              border: 'none',
+              color: '#fff',
+              borderRadius: '8px',
+              padding: '8px 12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+              fontSize: '0.9rem',
+              fontWeight: 'bold',
+              gap: '6px'
+            }}
+            title={t('pixelator.crop')}
+          >
+            {t('pixelator.crop')}
           </button>
         )}
 
