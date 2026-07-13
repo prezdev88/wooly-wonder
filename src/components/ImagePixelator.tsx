@@ -42,6 +42,8 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
   
   const [hoverColor, setHoverColor] = useState<{ hex: string; r: number; g: number; b: number } | null>(null);
   const [currentRowColors, setCurrentRowColors] = useState<{hex: string, count: number}[]>([]);
+  const [panelZoom, setPanelZoom] = useState(1);
+  const panelTouchStartRef = useRef<{ dist: number, zoom: number } | null>(null);
   
   // Store pixel data for fast lookup on hover
   const pixelDataRef = useRef<{ data: Uint8ClampedArray; pointsWide: number; rectWidth: number; rectHeight: number } | null>(null);
@@ -429,6 +431,33 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     if (e.touches.length === 0) setIsPanning(false);
   };
 
+  const handlePanelTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2) {
+      e.stopPropagation();
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      panelTouchStartRef.current = { dist, zoom: panelZoom };
+    }
+  };
+
+  const handlePanelTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2 && panelTouchStartRef.current) {
+      e.stopPropagation();
+      // e.preventDefault(); // Might interfere with scrolling if we do this unconditionally, but we are capturing 2-finger touch
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const zoomFactor = dist / panelTouchStartRef.current.dist;
+      const newZoom = Math.max(0.5, Math.min(3, panelTouchStartRef.current.zoom * zoomFactor));
+      setPanelZoom(newZoom);
+    }
+  };
+
+  const handlePanelTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length < 2) panelTouchStartRef.current = null;
+  };
+
   const handleCanvasClick = (e: React.MouseEvent) => {
     // Only register click for palette on left click
     if (e.button !== 0) return;
@@ -702,18 +731,27 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
         )}
 
         {currentRow != null && currentRowColors.length > 0 && (
-          <div className="row-colors-panel">
-            <span className="panel-title">
+          <div 
+            className="row-colors-panel"
+            onTouchStart={handlePanelTouchStart}
+            onTouchMove={handlePanelTouchMove}
+            onTouchEnd={handlePanelTouchEnd}
+          >
+            <span className="panel-title" style={{ fontSize: `${0.9 * panelZoom}rem` }}>
               {t('pixelator.rowColors', 'Colores de la fila:')}
             </span>
             {currentRowColors.map((item, idx) => {
               const matchedColor = palette.find(c => c.hex === item.hex);
               const label = matchedColor?.name || item.hex;
               return (
-                <div key={idx} className="color-item">
-                  <div style={{ width: '18px', height: '18px', borderRadius: '4px', background: item.hex, border: '1px solid rgba(255,255,255,0.2)' }}></div>
-                  <span style={{ color: 'var(--text-main)', fontSize: '1rem', fontWeight: 600, minWidth: '30px' }}>{item.count}x</span>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+                <div key={idx} className="color-item" style={{
+                  padding: `${6 * panelZoom}px ${10 * panelZoom}px`,
+                  gap: `${8 * panelZoom}px`,
+                  borderRadius: `${8 * panelZoom}px`
+                }}>
+                  <div style={{ width: `${18 * panelZoom}px`, height: `${18 * panelZoom}px`, borderRadius: `${4 * panelZoom}px`, background: item.hex, border: '1px solid rgba(255,255,255,0.2)' }}></div>
+                  <span style={{ color: 'var(--text-main)', fontSize: `${1 * panelZoom}rem`, fontWeight: 600, minWidth: `${30 * panelZoom}px` }}>{item.count}x</span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: `${0.9 * panelZoom}rem`, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
                 </div>
               );
             })}
