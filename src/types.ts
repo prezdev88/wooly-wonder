@@ -7,6 +7,7 @@ export interface ProjectImage {
   isPixelSizeLocked?: boolean;
   currentRow?: number | null;
   markedPixel?: { x: number, y: number } | null;
+  completedSegments?: Record<number, number[]>;
 }
 
 export interface SavedColor {
