@@ -41,6 +41,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
   
   
   const [hoverColor, setHoverColor] = useState<{ hex: string; r: number; g: number; b: number } | null>(null);
+  const [currentRowColors, setCurrentRowColors] = useState<{hex: string, count: number}[]>([]);
   
   // Store pixel data for fast lookup on hover
   const pixelDataRef = useRef<{ data: Uint8ClampedArray; pointsWide: number; rectWidth: number; rectHeight: number } | null>(null);
@@ -234,6 +235,30 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
          ctx.strokeStyle = accentColor;
          ctx.lineWidth = Math.max(3, scaleRatio * 3);
          ctx.strokeRect(0, rowToHighlight * rectHeight, canvas.width, rectHeight);
+
+         // Calculate color sequence for the current row
+         const sequence: { hex: string, count: number }[] = [];
+         let lastHex = '';
+         let count = 0;
+         
+         for (let x = 0; x < pointsWide; x++) {
+           const i = (rowToHighlight * pointsWide + x) * 4;
+           const r = imgData.data[i];
+           const g = imgData.data[i+1];
+           const b = imgData.data[i+2];
+           const hex = '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('').toUpperCase();
+           
+           if (hex === lastHex) {
+             count++;
+           } else {
+             if (count > 0) sequence.push({ hex: lastHex, count });
+             lastHex = hex;
+             count = 1;
+           }
+         }
+         if (count > 0) sequence.push({ hex: lastHex, count });
+         
+         setTimeout(() => setCurrentRowColors(sequence), 0);
        }
        
        // Draw Marked Pixel
@@ -673,6 +698,25 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
                 ▼
               </button>
             </div>
+          </div>
+        )}
+
+        {currentRow != null && currentRowColors.length > 0 && (
+          <div className="row-colors-panel">
+            <span className="panel-title">
+              {t('pixelator.rowColors', 'Colores de la fila:')}
+            </span>
+            {currentRowColors.map((item, idx) => {
+              const matchedColor = palette.find(c => c.hex === item.hex);
+              const label = matchedColor?.name || item.hex;
+              return (
+                <div key={idx} className="color-item">
+                  <div style={{ width: '18px', height: '18px', borderRadius: '4px', background: item.hex, border: '1px solid rgba(255,255,255,0.2)' }}></div>
+                  <span style={{ color: 'var(--text-main)', fontSize: '1rem', fontWeight: 600, minWidth: '30px' }}>{item.count}x</span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+                </div>
+              );
+            })}
           </div>
         )}
 

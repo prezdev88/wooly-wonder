@@ -379,6 +379,43 @@ canvas {
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
+.row-colors-panel {
+  position: absolute;
+  top: 80px;
+  left: 16px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  padding: 16px;
+  border-radius: 12px;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  backdrop-filter: blur(10px);
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  min-width: 200px;
+  pointer-events: auto;
+}
+
+.row-colors-panel .panel-title {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 8px;
+}
+
+.row-colors-panel .color-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0,0,0,0.2);
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
 /* Responsive adjustments for Web/Mobile */
 @media (max-width: 768px) {
   body, #root {
@@ -553,6 +590,37 @@ canvas {
     padding: 12px 16px !important;
     gap: 12px !important;
     justify-content: center;
+  }
+  .row-colors-panel {
+    top: auto;
+    bottom: 110px;
+    left: 12px;
+    right: 12px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    overflow-x: hidden;
+    overflow-y: auto;
+    min-width: 0;
+    max-height: 130px; /* Approx 3 rows of tags */
+    padding: 12px;
+    gap: 8px;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  
+  .row-colors-panel .panel-title {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 4px;
+    margin-right: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 4px;
+    display: block;
+  }
+  
+  .row-colors-panel .color-item {
+    flex-shrink: 0;
+    padding: 4px 8px;
   }
 }
 
