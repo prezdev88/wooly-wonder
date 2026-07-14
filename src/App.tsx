@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import ImagePixelator from './components/ImagePixelator'
 import SettingsDialog from './components/SettingsDialog'
+import ConfirmDialog from './components/ConfirmDialog'
 import type { Project, ProjectImage, SavedColor } from './types'
 import localforage from 'localforage'
 import './index.css'
@@ -14,6 +15,13 @@ const THEMES = [
 ];
 
 type MotionLevel = 'full' | 'subtle' | 'none';
+
+type Confirmation = {
+  confirmLabel: string;
+  description: string;
+  onConfirm: () => void | Promise<void>;
+  title: string;
+};
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -31,6 +39,7 @@ function App() {
     };
   });
   const [showSettings, setShowSettings] = useState(false);
+  const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const [language, setLanguage] = useState(localStorage.getItem('language') || 'es');
   const [motionLevel, setMotionLevel] = useState<MotionLevel>('subtle');
   const [areSettingsLoaded, setAreSettingsLoaded] = useState(false);
@@ -188,27 +197,39 @@ function App() {
 
   const deleteProject = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm(t('project.confirmDeleteProject'))) {
-      const updated = await deleteProjectData(id);
-      setProjects(updated);
-      if (activeProjectId === id) {
-        setActiveProjectId(null);
-        setActiveImage(null);
+    setConfirmation({
+      title: t('project.deleteProjectTitle'),
+      description: t('project.confirmDeleteProject'),
+      confirmLabel: t('project.deleteProjectAction'),
+      onConfirm: async () => {
+        const updated = await deleteProjectData(id);
+        setProjects(updated);
+        if (activeProjectId === id) {
+          setActiveProjectId(null);
+          setActiveImage(null);
+        }
+        setConfirmation(null);
       }
-    }
+    });
   };
 
   const deleteImage = async (imgId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm(t('project.confirmDeletePhoto'))) {
-      if (!activeProject) return;
-      const updatedProject = { 
-        ...activeProject, 
-        images: activeProject.images.filter(img => img.id !== imgId) 
-      };
-      const updatedProjects = await saveProjectData(updatedProject);
-      setProjects(updatedProjects);
-    }
+    setConfirmation({
+      title: t('project.deletePhotoTitle'),
+      description: t('project.confirmDeletePhoto'),
+      confirmLabel: t('project.deletePhotoAction'),
+      onConfirm: async () => {
+        if (!activeProject) return;
+        const updatedProject = {
+          ...activeProject,
+          images: activeProject.images.filter(img => img.id !== imgId)
+        };
+        const updatedProjects = await saveProjectData(updatedProject);
+        setProjects(updatedProjects);
+        setConfirmation(null);
+      }
+    });
   };
 
   const handleFileUpload = async (files: FileList | File[], targetProject?: Project) => {
@@ -455,6 +476,17 @@ function App() {
           onThemeChange={setThemeId}
           themeId={themeId}
           themes={THEMES}
+        />
+      )}
+
+      {confirmation && (
+        <ConfirmDialog
+          cancelLabel={t('common.cancel')}
+          confirmLabel={confirmation.confirmLabel}
+          description={confirmation.description}
+          onCancel={() => setConfirmation(null)}
+          onConfirm={confirmation.onConfirm}
+          title={confirmation.title}
         />
       )}
 

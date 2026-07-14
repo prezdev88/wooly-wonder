@@ -47,6 +47,9 @@
     "motionNone": "Disabled",
     "motionNoneDescription": "Remove non-essential animations and transitions."
   },
+  "common": {
+    "cancel": "Cancel"
+  },
   "project": {
     "newProject": "+ New Project",
     "untitled": "Untitled",
@@ -62,6 +65,10 @@
     "cancel": "Cancel",
     "confirmDeleteProject": "Are you sure you want to completely delete this project?",
     "confirmDeletePhoto": "Are you sure you want to delete this photo from the project?",
+    "deleteProjectTitle": "Delete project",
+    "deleteProjectAction": "Delete project",
+    "deletePhotoTitle": "Delete image",
+    "deletePhotoAction": "Delete image",
     "newProjectDefault": "New Project"
   },
   "pixelator": {
@@ -86,6 +93,8 @@
     "noColorsSaved": "(No colors saved)",
     "pdfSaved": "✅ Your pattern was saved as {{filename}}",
     "crop": "✂️ Crop",
-    "confirmCrop": "Are you sure you want to crop the image to the current view?"
+    "confirmCrop": "The image will be replaced with the area currently in view. This action cannot be undone.",
+    "cropTitle": "Crop image",
+    "cropAction": "Crop"
   }
 }

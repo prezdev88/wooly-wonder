@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { jsPDF } from 'jspdf';
 import { useTranslation } from 'react-i18next';
+import ConfirmDialog from './ConfirmDialog';
 
 import type { SavedColor } from '../types';
 
@@ -40,6 +41,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
   const touchStartRef = useRef<{ dist: number, zoom: number, x: number, y: number, panX: number, panY: number } | null>(null);
   const [showFabMenu, setShowFabMenu] = useState(false);
+  const [showCropConfirmation, setShowCropConfirmation] = useState(false);
   
   
   const [hoverColor, setHoverColor] = useState<{ hex: string; r: number; g: number; b: number } | null>(null);
@@ -726,7 +728,11 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
 
   const handleCrop = () => {
     if (!originalImage || !canvasRef.current || !onUpdateImageUrl) return;
-    if (window.confirm(t('pixelator.confirmCrop'))) {
+    setShowCropConfirmation(true);
+  };
+
+  const cropImage = () => {
+    if (!originalImage || !canvasRef.current || !onUpdateImageUrl) return;
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
@@ -769,7 +775,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
       
       setViewState({ zoom: 1, panX: 0, panY: 0 });
       onUpdateImageUrl(newUrl);
-    }
+      setShowCropConfirmation(false);
   };
 
   return (
@@ -1262,6 +1268,18 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
             {notification}
           </div>
         </>
+      )}
+
+      {showCropConfirmation && (
+        <ConfirmDialog
+          cancelLabel={t('common.cancel')}
+          confirmLabel={t('pixelator.cropAction')}
+          description={t('pixelator.confirmCrop')}
+          onCancel={() => setShowCropConfirmation(false)}
+          onConfirm={cropImage}
+          title={t('pixelator.cropTitle')}
+          tone="warning"
+        />
       )}
     </div>
   );
