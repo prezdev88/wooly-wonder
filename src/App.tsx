@@ -8,10 +8,12 @@ import localforage from 'localforage'
 import './index.css'
 
 const THEMES = [
-  { id: 'dracula', nameKey: 'draculaTheme', bg: '#282A36', panel: '#44475A', border: 'rgba(255, 255, 255, 0.1)', textMain: '#F8F8F2', textMuted: '#6272A4', accent: '#FF79C6', hover: '#FF92DF' },
+  { id: 'dracula', nameKey: 'draculaTheme', bg: '#242631', panel: '#303341', border: 'rgba(255, 255, 255, 0.11)', textMain: '#F4F4F2', textMuted: '#B2B5C8', accent: '#FF79C6', hover: '#FF92DF' },
   { id: 'light-blue', nameKey: 'lightBlue', bg: '#F8F9FA', panel: '#FFFFFF', border: 'rgba(0, 0, 0, 0.08)', textMain: '#212529', textMuted: '#6C757D', accent: '#3A86FF', hover: '#6BA2FF' },
   { id: 'sepia', nameKey: 'sepiaTheme', bg: '#F4E1D2', panel: '#E8D5C4', border: 'rgba(0, 0, 0, 0.05)', textMain: '#5E4A3D', textMuted: '#8A7A6E', accent: '#E07A5F', hover: '#F4A261' },
 ];
+
+type MotionLevel = 'full' | 'subtle' | 'none';
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -30,6 +32,7 @@ function App() {
   });
   const [showSettings, setShowSettings] = useState(false);
   const [language, setLanguage] = useState(localStorage.getItem('language') || 'es');
+  const [motionLevel, setMotionLevel] = useState<MotionLevel>('subtle');
   const [areSettingsLoaded, setAreSettingsLoaded] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -52,6 +55,7 @@ function App() {
             setLanguage(settings.language);
             i18n.changeLanguage(settings.language);
           }
+          if (settings.motionLevel) setMotionLevel(settings.motionLevel);
         } else {
           const settings = (await localforage.getItem<any>('settings')) || {};
           if (settings.themeId) setThemeId(settings.themeId);
@@ -60,6 +64,7 @@ function App() {
             setLanguage(settings.language);
             i18n.changeLanguage(settings.language);
           }
+          if (settings.motionLevel) setMotionLevel(settings.motionLevel);
         }
       } catch (e) {
         console.error("Error loading settings", e);
@@ -142,13 +147,15 @@ function App() {
       localStorage.setItem('language', language);
     }
 
-    const settingsToSave = { themeId, customTheme, language };
+    document.documentElement.dataset.motion = motionLevel;
+
+    const settingsToSave = { themeId, customTheme, language, motionLevel };
     if (window.electronAPI && window.electronAPI.saveSettings) {
       window.electronAPI.saveSettings(settingsToSave).catch(e => console.error("Error saving settings", e));
     } else {
       localforage.setItem('settings', settingsToSave).catch(e => console.error("Error saving settings", e));
     }
-  }, [areSettingsLoaded, customTheme, language, themeId]);
+  }, [areSettingsLoaded, customTheme, language, motionLevel, themeId]);
 
   const changeLanguage = (newLanguage: string) => {
     setLanguage(newLanguage);
@@ -397,30 +404,33 @@ function App() {
     <>
       {!isFocusMode && (
         <header className="app-header">
-          <h1>{t('app.title')}</h1>
-          <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', WebkitAppRegion: 'no-drag', flex: 1, textAlign: 'center' } as any}>
+          <div className="app-brand">
+            <span className="app-brand-mark">W</span>
+            <h1>{t('app.title')}</h1>
+          </div>
+          <div className="header-context">
             {activeProject ? activeProject.name : t('app.myPatterns')}
           </div>
-        <div style={{ WebkitAppRegion: 'no-drag', position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' } as any}>
-          <button 
+        <div className="header-actions">
+          <button
+            className="icon-button"
             onClick={() => setShowSettings(!showSettings)}
-            style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer', fontSize: '1.4rem', padding: '0 8px' }}
             title={t('app.preferences')}
           >
-            ⚙️
+            ⚙
           </button>
           {window.electronAPI && (
             <>
               <button 
+                className="window-button"
                 onClick={() => window.electronAPI.minimizeApp()}
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer', fontSize: '1.2rem', padding: '0 8px', opacity: 0.7 }}
                 title={t('app.minimize')}
               >
                 —
               </button>
               <button 
+                className="window-button close"
                 onClick={() => window.electronAPI.closeApp()}
-                style={{ background: 'transparent', border: 'none', color: '#ff5f56', cursor: 'pointer', fontSize: '1.2rem', padding: '0 8px', fontWeight: 'bold' }}
                 title={t('app.close')}
               >
                 ✕
@@ -439,7 +449,9 @@ function App() {
           onClose={() => setShowSettings(false)}
           onCustomThemeChange={setCustomTheme}
           language={language}
+          motionLevel={motionLevel}
           onLanguageChange={changeLanguage}
+          onMotionLevelChange={setMotionLevel}
           onThemeChange={setThemeId}
           themeId={themeId}
           themes={THEMES}
@@ -477,10 +489,12 @@ function App() {
         </aside>
         )}
 
-        <main className="main-content" style={{ padding: isFocusMode ? '0' : '40px' }}>
+        <main className={`main-content ${isFocusMode ? 'focus-mode' : ''}`}>
           {!activeProject ? (
-            <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+            <div className="empty-state">
+              <span className="empty-state-mark">W</span>
               <h3>{t('project.selectOrCreate')}</h3>
+              <button className="primary-button" onClick={createProject}>{t('project.newProject')}</button>
             </div>
           ) : activeImage ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: isFocusMode ? '0' : '20px', height: '100%' }}>
@@ -508,23 +522,12 @@ function App() {
               />
             </div>
           ) : (
-            <div className="fade-in">
+            <div className="project-view fade-in">
               <input 
+                className="project-name-input"
                 type="text" 
                 value={activeProject.name} 
                 onChange={handleProjectNameChange}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  borderBottom: '2px solid var(--panel-border)',
-                  color: 'var(--text-main)',
-                  fontSize: '2rem',
-                  fontFamily: 'inherit',
-                  outline: 'none',
-                  padding: '8px 0',
-                  width: '100%',
-                  marginBottom: '20px'
-                }}
                 placeholder={t('project.projectName')}
               />
               

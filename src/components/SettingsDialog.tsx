@@ -16,7 +16,9 @@ type Theme = {
 
 type CustomTheme = Omit<Theme, 'id' | 'nameKey'>
 
-type SettingsPage = 'theme' | 'language' | 'settingsFile'
+type MotionLevel = 'full' | 'subtle' | 'none'
+
+type SettingsPage = 'theme' | 'motion' | 'language' | 'settingsFile'
 
 type SettingsGroup = {
   id: string
@@ -34,7 +36,9 @@ type SettingsDialogProps = {
   onClose: () => void
   onCustomThemeChange: (theme: CustomTheme) => void
   language: string
+  motionLevel: MotionLevel
   onLanguageChange: (language: string) => void
+  onMotionLevelChange: (motionLevel: MotionLevel) => void
   onThemeChange: (themeId: string) => void
   themeId: string
   themes: Theme[]
@@ -45,7 +49,10 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
     id: 'appearance',
     labelKey: 'settings.appearance',
     icon: '◐',
-    children: [{ id: 'theme', labelKey: 'settings.theme' }]
+    children: [
+      { id: 'theme', labelKey: 'settings.theme' },
+      { id: 'motion', labelKey: 'settings.motion' }
+    ]
   },
   {
     id: 'general',
@@ -72,9 +79,11 @@ function SettingsDialog({
   appVersion,
   customTheme,
   language,
+  motionLevel,
   onClose,
   onCustomThemeChange,
   onLanguageChange,
+  onMotionLevelChange,
   onThemeChange,
   themeId,
   themes
@@ -203,6 +212,37 @@ function SettingsDialog({
     </>
   )
 
+  const renderMotionSettings = () => (
+    <>
+      <div className="settings-page-heading">
+        <span className="settings-eyebrow">{t('settings.appearance')}</span>
+        <h3>{t('settings.motion')}</h3>
+        <p>{t('settings.motionDescription')}</p>
+      </div>
+
+      <div className="motion-options">
+        {(['full', 'subtle', 'none'] as MotionLevel[]).map((level) => {
+          const isActive = motionLevel === level
+          return (
+            <button
+              className={`motion-option ${isActive ? 'active' : ''}`}
+              key={level}
+              onClick={() => onMotionLevelChange(level)}
+              type="button"
+            >
+              <span className={`motion-preview ${level}`}><i /><i /><i /></span>
+              <span>
+                <strong>{t(`settings.motion${level[0].toUpperCase()}${level.slice(1)}`)}</strong>
+                <small>{t(`settings.motion${level[0].toUpperCase()}${level.slice(1)}Description`)}</small>
+              </span>
+              {isActive && <span className="settings-check">✓</span>}
+            </button>
+          )
+        })}
+      </div>
+    </>
+  )
+
   const renderSettingsFile = () => (
     <>
       <div className="settings-page-heading">
@@ -232,6 +272,9 @@ function SettingsDialog({
     }
     if (activePage === 'language') {
       return renderLanguageSettings()
+    }
+    if (activePage === 'motion') {
+      return renderMotionSettings()
     }
     return renderSettingsFile()
   }

@@ -23,6 +23,7 @@
     "appearance": "Apariencia",
     "general": "General",
     "theme": "Tema",
+    "motion": "Movimiento",
     "language": "Idioma",
     "settingsFile": "Archivo de ajustes",
     "themeDescription": "Elige cómo se ve Wooly Wonder o crea una combinación de colores propia.",
@@ -37,7 +38,14 @@
     "enLanguage": "Interfaz en inglés",
     "settingsFileDescription": "Todos tus ajustes se guardan en un único archivo JSON que puedes compartir con otros usuarios.",
     "settingsFileHint": "Copia este archivo para compartir tus preferencias. Para aplicarlas en otro equipo, reemplaza allí su settings.json y reinicia la aplicación.",
-    "openSettingsFolder": "Abrir carpeta"
+    "openSettingsFolder": "Abrir carpeta",
+    "motionDescription": "Controla cuánto movimiento y profundidad utiliza la interfaz.",
+    "motionFull": "Completo",
+    "motionFullDescription": "Transiciones expresivas, entradas y efectos de profundidad.",
+    "motionSubtle": "Sutil",
+    "motionSubtleDescription": "Movimiento breve y discreto para mantener el contexto.",
+    "motionNone": "Desactivado",
+    "motionNoneDescription": "Elimina las animaciones y transiciones no esenciales."
   },
   "project": {
     "newProject": "+ Nuevo Proyecto",
