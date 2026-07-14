@@ -13,7 +13,7 @@ const settingsPath = path.join(dataDir, 'settings.json');
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
 if (!fs.existsSync(dbPath)) fs.writeFileSync(dbPath, JSON.stringify({ projects: [] }));
-if (!fs.existsSync(settingsPath)) fs.writeFileSync(settingsPath, JSON.stringify({}));
+if (!fs.existsSync(settingsPath)) fs.writeFileSync(settingsPath, JSON.stringify({}, null, 2));
 
 protocol.registerSchemesAsPrivileged([
   { scheme: 'pixelit', privileges: { standard: true, secure: true, supportFetchAPI: true, bypassCSP: true, corsEnabled: true } }
@@ -102,8 +102,15 @@ ipcMain.handle('get-settings', () => {
 });
 
 ipcMain.handle('save-settings', (event, settings) => {
-  fs.writeFileSync(settingsPath, JSON.stringify(settings));
+  const temporaryPath = `${settingsPath}.tmp`;
+  fs.writeFileSync(temporaryPath, JSON.stringify(settings, null, 2));
+  fs.renameSync(temporaryPath, settingsPath);
   return true;
+});
+
+ipcMain.handle('open-settings-folder', () => {
+  shell.showItemInFolder(settingsPath);
+  return settingsPath;
 });
 
 ipcMain.handle('save-image', (event, { base64Data, filename }) => {

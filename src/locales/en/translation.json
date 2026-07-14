@@ -24,6 +24,7 @@
     "general": "General",
     "theme": "Theme",
     "language": "Language",
+    "settingsFile": "Settings file",
     "themeDescription": "Choose how Wooly Wonder looks or create your own color combination.",
     "languageDescription": "Select the language used throughout the application.",
     "customColors": "Custom colors",
@@ -33,7 +34,10 @@
     "text": "Text",
     "accent": "Accent",
     "esLanguage": "Spanish interface",
-    "enLanguage": "English interface"
+    "enLanguage": "English interface",
+    "settingsFileDescription": "All your settings are stored in a single JSON file that you can share with other users.",
+    "settingsFileHint": "Copy this file to share your preferences. To apply them on another computer, replace its settings.json and restart the application.",
+    "openSettingsFolder": "Open folder"
   },
   "project": {
     "newProject": "+ New Project",

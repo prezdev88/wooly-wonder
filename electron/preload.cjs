@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   savePdf: (data) => ipcRenderer.invoke('save-pdf', data),
   getSettings: () => ipcRenderer.invoke('get-settings'),
   saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
+  openSettingsFolder: () => ipcRenderer.invoke('open-settings-folder'),
   closeApp: () => ipcRenderer.send('close-app'),
   minimizeApp: () => ipcRenderer.send('minimize-app'),
 });

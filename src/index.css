@@ -747,6 +747,51 @@ canvas {
   letter-spacing: 0.05em;
 }
 
+.settings-file-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 20px;
+  background: color-mix(in srgb, var(--panel-bg) 72%, transparent);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+}
+
+.settings-file-icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 13%, transparent);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.settings-file-card strong {
+  font-size: 1rem;
+}
+
+.settings-file-card p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.settings-file-card button {
+  padding: 10px 14px;
+  color: var(--accent-text);
+  background: var(--accent);
+  border: 0;
+  border-radius: 9px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 @keyframes settingsBackdropIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -894,6 +939,14 @@ canvas {
   .theme-grid,
   .custom-color-grid {
     grid-template-columns: 1fr;
+  }
+
+  .settings-file-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .settings-file-card button {
+    grid-column: 1 / -1;
   }
   
   .sidebar {

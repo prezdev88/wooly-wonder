@@ -14,7 +14,7 @@ const THEMES = [
 ];
 
 function App() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [themeId, setThemeId] = useState(localStorage.getItem('themeId') || 'dracula');
   const [customTheme, setCustomTheme] = useState(() => {
     const saved = localStorage.getItem('customTheme');
@@ -29,6 +29,8 @@ function App() {
     };
   });
   const [showSettings, setShowSettings] = useState(false);
+  const [language, setLanguage] = useState(localStorage.getItem('language') || 'es');
+  const [areSettingsLoaded, setAreSettingsLoaded] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
@@ -46,13 +48,23 @@ function App() {
           const settings = await window.electronAPI.getSettings();
           if (settings.themeId) setThemeId(settings.themeId);
           if (settings.customTheme) setCustomTheme(settings.customTheme);
+          if (settings.language) {
+            setLanguage(settings.language);
+            i18n.changeLanguage(settings.language);
+          }
         } else {
           const settings = (await localforage.getItem<any>('settings')) || {};
           if (settings.themeId) setThemeId(settings.themeId);
           if (settings.customTheme) setCustomTheme(settings.customTheme);
+          if (settings.language) {
+            setLanguage(settings.language);
+            i18n.changeLanguage(settings.language);
+          }
         }
       } catch (e) {
         console.error("Error loading settings", e);
+      } finally {
+        setAreSettingsLoaded(true);
       }
     };
     fetchSettings();
@@ -70,7 +82,7 @@ function App() {
       }
     };
     fetchProjects();
-  }, []);
+  }, [i18n]);
 
   const saveProjectData = async (project: Project) => {
     if (window.electronAPI) {
@@ -96,6 +108,8 @@ function App() {
   };
 
   useEffect(() => {
+    if (!areSettingsLoaded) return;
+
     let theme;
     if (themeId === 'custom') {
       theme = customTheme;
@@ -122,18 +136,24 @@ function App() {
     };
     document.documentElement.style.setProperty('--accent-text', getContrastYIQ(theme.accent));
 
-    localStorage.setItem('themeId', themeId);
-    if (themeId === 'custom') {
+    if (!window.electronAPI) {
+      localStorage.setItem('themeId', themeId);
       localStorage.setItem('customTheme', JSON.stringify(customTheme));
+      localStorage.setItem('language', language);
     }
 
-    const settingsToSave = { themeId, customTheme };
+    const settingsToSave = { themeId, customTheme, language };
     if (window.electronAPI && window.electronAPI.saveSettings) {
       window.electronAPI.saveSettings(settingsToSave).catch(e => console.error("Error saving settings", e));
     } else {
       localforage.setItem('settings', settingsToSave).catch(e => console.error("Error saving settings", e));
     }
-  }, [themeId, customTheme]);
+  }, [areSettingsLoaded, customTheme, language, themeId]);
+
+  const changeLanguage = (newLanguage: string) => {
+    setLanguage(newLanguage);
+    i18n.changeLanguage(newLanguage);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -418,6 +438,8 @@ function App() {
           customTheme={customTheme}
           onClose={() => setShowSettings(false)}
           onCustomThemeChange={setCustomTheme}
+          language={language}
+          onLanguageChange={changeLanguage}
           onThemeChange={setThemeId}
           themeId={themeId}
           themes={THEMES}

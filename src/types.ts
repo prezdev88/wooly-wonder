@@ -37,6 +37,7 @@ declare global {
       savePdf: (data: { base64Data: string; filename: string }) => Promise<boolean>;
       getSettings: () => Promise<any>;
       saveSettings: (settings: any) => Promise<boolean>;
+      openSettingsFolder: () => Promise<string>;
       closeApp: () => void;
       minimizeApp: () => void;
     };

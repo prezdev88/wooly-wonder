@@ -16,7 +16,7 @@ type Theme = {
 
 type CustomTheme = Omit<Theme, 'id' | 'nameKey'>
 
-type SettingsPage = 'theme' | 'language'
+type SettingsPage = 'theme' | 'language' | 'settingsFile'
 
 type SettingsGroup = {
   id: string
@@ -33,6 +33,8 @@ type SettingsDialogProps = {
   customTheme: CustomTheme
   onClose: () => void
   onCustomThemeChange: (theme: CustomTheme) => void
+  language: string
+  onLanguageChange: (language: string) => void
   onThemeChange: (themeId: string) => void
   themeId: string
   themes: Theme[]
@@ -49,7 +51,10 @@ const SETTINGS_GROUPS: SettingsGroup[] = [
     id: 'general',
     labelKey: 'settings.general',
     icon: '⚙',
-    children: [{ id: 'language', labelKey: 'settings.language' }]
+    children: [
+      { id: 'language', labelKey: 'settings.language' },
+      { id: 'settingsFile', labelKey: 'settings.settingsFile' }
+    ]
   }
 ]
 
@@ -66,13 +71,15 @@ const CUSTOM_COLOR_FIELDS: Array<{
 function SettingsDialog({
   appVersion,
   customTheme,
+  language,
   onClose,
   onCustomThemeChange,
+  onLanguageChange,
   onThemeChange,
   themeId,
   themes
 }: SettingsDialogProps) {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const [activePage, setActivePage] = useState<SettingsPage>('theme')
 
   useEffect(() => {
@@ -90,11 +97,6 @@ function SettingsDialog({
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [onClose])
-
-  const changeLanguage = (language: string) => {
-    i18n.changeLanguage(language)
-    localStorage.setItem('language', language)
-  }
 
   const changeCustomColor = (key: keyof CustomTheme, value: string) => {
     const hover = key === 'accent' ? value : customTheme.hover
@@ -179,19 +181,19 @@ function SettingsDialog({
       </div>
 
       <div className="language-options">
-        {['es', 'en'].map((language) => {
-          const isActive = i18n.language.startsWith(language)
+        {['es', 'en'].map((languageCode) => {
+          const isActive = language === languageCode
           return (
             <button
               className={`language-option ${isActive ? 'active' : ''}`}
-              key={language}
-              onClick={() => changeLanguage(language)}
+              key={languageCode}
+              onClick={() => onLanguageChange(languageCode)}
               type="button"
             >
-              <span className="language-code">{language.toUpperCase()}</span>
+              <span className="language-code">{languageCode.toUpperCase()}</span>
               <span>
-                <strong>{t(language === 'es' ? 'app.spanish' : 'app.english')}</strong>
-                <small>{t(`settings.${language}Language`)}</small>
+                <strong>{t(languageCode === 'es' ? 'app.spanish' : 'app.english')}</strong>
+                <small>{t(`settings.${languageCode}Language`)}</small>
               </span>
               {isActive && <span className="settings-check">✓</span>}
             </button>
@@ -200,6 +202,39 @@ function SettingsDialog({
       </div>
     </>
   )
+
+  const renderSettingsFile = () => (
+    <>
+      <div className="settings-page-heading">
+        <span className="settings-eyebrow">{t('settings.general')}</span>
+        <h3>{t('settings.settingsFile')}</h3>
+        <p>{t('settings.settingsFileDescription')}</p>
+      </div>
+
+      <section className="settings-file-card">
+        <span className="settings-file-icon">{'{ }'}</span>
+        <div>
+          <strong>settings.json</strong>
+          <p>{t('settings.settingsFileHint')}</p>
+        </div>
+        {window.electronAPI && (
+          <button onClick={() => window.electronAPI.openSettingsFolder()} type="button">
+            {t('settings.openSettingsFolder')}
+          </button>
+        )}
+      </section>
+    </>
+  )
+
+  const renderActivePage = () => {
+    if (activePage === 'theme') {
+      return renderThemeSettings()
+    }
+    if (activePage === 'language') {
+      return renderLanguageSettings()
+    }
+    return renderSettingsFile()
+  }
 
   return createPortal(
     <div className="settings-backdrop" onMouseDown={onClose}>
@@ -256,7 +291,7 @@ function SettingsDialog({
             ×
           </button>
           <div className="settings-content-scroll">
-            {activePage === 'theme' ? renderThemeSettings() : renderLanguageSettings()}
+            {renderActivePage()}
           </div>
         </section>
       </div>
