@@ -16,6 +16,25 @@
     "spanish": "Spanish",
     "english": "English"
   },
+  "settings": {
+    "title": "Settings",
+    "navigation": "Settings sections",
+    "close": "Close settings",
+    "appearance": "Appearance",
+    "general": "General",
+    "theme": "Theme",
+    "language": "Language",
+    "themeDescription": "Choose how Wooly Wonder looks or create your own color combination.",
+    "languageDescription": "Select the language used throughout the application.",
+    "customColors": "Custom colors",
+    "customColorsDescription": "Changes are applied and saved automatically.",
+    "background": "Background",
+    "panels": "Panels",
+    "text": "Text",
+    "accent": "Accent",
+    "esLanguage": "Spanish interface",
+    "enLanguage": "English interface"
+  },
   "project": {
     "newProject": "+ New Project",
     "untitled": "Untitled",

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import ImagePixelator from './components/ImagePixelator'
+import SettingsDialog from './components/SettingsDialog'
 import type { Project, ProjectImage, SavedColor } from './types'
 import localforage from 'localforage'
 import './index.css'
@@ -13,7 +14,7 @@ const THEMES = [
 ];
 
 function App() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [themeId, setThemeId] = useState(localStorage.getItem('themeId') || 'dracula');
   const [customTheme, setCustomTheme] = useState(() => {
     const saved = localStorage.getItem('customTheme');
@@ -386,7 +387,7 @@ function App() {
             style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer', fontSize: '1.4rem', padding: '0 8px' }}
             title={t('app.preferences')}
           >
-            🎨
+            ⚙️
           </button>
           {window.electronAPI && (
             <>
@@ -407,146 +408,20 @@ function App() {
             </>
           )}
           
-          {showSettings && (
-            <div style={{
-              position: 'absolute',
-              top: '100%',
-              right: 0,
-              marginTop: '16px',
-              background: 'var(--panel-bg)',
-              border: '1px solid var(--panel-border)',
-              borderRadius: '12px',
-              padding: '16px',
-              backdropFilter: 'blur(30px)',
-              boxShadow: '0 10px 40px rgba(0,0,0,0.8)',
-              zIndex: 100,
-              minWidth: '220px'
-            }}>
-              <h4 style={{ margin: '0 0 16px 0', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 500, letterSpacing: '0.5px' }}>{t('app.appTheme')}</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {THEMES.map(theme => (
-                  <button
-                    key={theme.id}
-                    onClick={() => {
-                      setThemeId(theme.id);
-                      setShowSettings(false);
-                    }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      background: themeId === theme.id ? 'rgba(255,255,255,0.08)' : 'transparent',
-                      border: '1px solid',
-                      borderColor: themeId === theme.id ? 'rgba(255,255,255,0.1)' : 'transparent',
-                      padding: '10px 14px',
-                      borderRadius: '8px',
-                      color: themeId === theme.id ? theme.accent : 'var(--text-main)',
-                      fontWeight: themeId === theme.id ? 600 : 400,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      width: '100%',
-                      textAlign: 'left'
-                    }}
-                    onMouseOver={(e) => {
-                      if (themeId !== theme.id) e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-                    }}
-                    onMouseOut={(e) => {
-                      if (themeId !== theme.id) e.currentTarget.style.background = 'transparent';
-                    }}
-                  >
-                    <div style={{ 
-                      width: '16px', 
-                      height: '16px', 
-                      borderRadius: '50%', 
-                      background: theme.accent,
-                      boxShadow: `0 0 10px ${theme.accent}80`
-                    }}></div>
-                    {t('themes.' + theme.nameKey)}
-                  </button>
-                ))}
-                  
-                  <div 
-                    onClick={() => setThemeId('custom')}
-                    style={{
-                      background: themeId === 'custom' ? 'rgba(255,255,255,0.1)' : 'transparent',
-                      border: '1px solid',
-                      borderColor: themeId === 'custom' ? 'var(--accent)' : 'var(--panel-border)',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '12px',
-                      cursor: 'pointer',
-                      transition: 'var(--transition)'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '1rem', color: themeId === 'custom' ? 'var(--accent)' : 'var(--text-main)', fontWeight: themeId === 'custom' ? 600 : 400, flex: 1 }}>
-                        {t('app.customTheme')}
-                      </span>
-                    </div>
-                    {themeId === 'custom' && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }} onClick={e => e.stopPropagation()}>
-                        {Object.entries({
-                          bg: 'Background',
-                          panel: 'Panels',
-                          textMain: 'Text',
-                          accent: 'Accent'
-                        }).map(([key, label]) => (
-                          <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <input 
-                              type="color" 
-                              value={customTheme[key as keyof typeof customTheme]}
-                              onChange={(e) => setCustomTheme(prev => ({ ...prev, [key]: e.target.value, ...(key === 'accent' ? { hover: e.target.value } : {}) }))}
-                              style={{ width: '28px', height: '28px', padding: 0, border: 'none', borderRadius: '4px', cursor: 'pointer', background: 'none' }}
-                            />
-                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{label}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-              </div>
-              <h4 style={{ margin: '16px 0', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 500, letterSpacing: '0.5px' }}>{t('app.language')}</h4>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  onClick={() => {
-                    i18n.changeLanguage('es');
-                    localStorage.setItem('language', 'es');
-                  }}
-                  style={{
-                    flex: 1, padding: '6px', borderRadius: '6px', cursor: 'pointer',
-                    background: i18n.language === 'es' ? 'var(--accent)' : 'transparent',
-                    border: '1px solid', borderColor: i18n.language === 'es' ? 'transparent' : 'var(--panel-border)',
-                    color: i18n.language === 'es' ? '#fff' : 'var(--text-main)'
-                  }}
-                >
-                  {t('app.spanish')}
-                </button>
-                <button
-                  onClick={() => {
-                    i18n.changeLanguage('en');
-                    localStorage.setItem('language', 'en');
-                  }}
-                  style={{
-                    flex: 1, padding: '6px', borderRadius: '6px', cursor: 'pointer',
-                    background: i18n.language === 'en' ? 'var(--accent)' : 'transparent',
-                    border: '1px solid', borderColor: i18n.language === 'en' ? 'transparent' : 'var(--panel-border)',
-                    color: i18n.language === 'en' ? '#fff' : 'var(--text-main)'
-                  }}
-                >
-                  {t('app.english')}
-                </button>
-              </div>
-              {appVersion && (
-                <div style={{ marginTop: '16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.75rem', letterSpacing: '0.5px' }}>
-                  v{appVersion}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </header>
+      )}
+
+      {showSettings && (
+        <SettingsDialog
+          appVersion={appVersion}
+          customTheme={customTheme}
+          onClose={() => setShowSettings(false)}
+          onCustomThemeChange={setCustomTheme}
+          onThemeChange={setThemeId}
+          themeId={themeId}
+          themes={THEMES}
+        />
       )}
 
       <div className="app-container">
