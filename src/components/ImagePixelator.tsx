@@ -878,44 +878,12 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
           </div>
         )}
 
-        {onSetFocus && (
-          <button 
-            onClick={() => onSetFocus(!isFocusMode)}
-            style={{
-              position: 'absolute',
-              top: 16,
-              right: 16,
-              zIndex: 100,
-              background: 'rgba(0,0,0,0.4)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              backdropFilter: 'blur(8px)',
-              color: 'var(--text-main)',
-              borderRadius: '8px',
-              width: '36px',
-              height: '36px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              opacity: isFocusMode ? 0.3 : 0.8,
-              transition: 'all 0.3s ease',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-              fontSize: '1.2rem'
-            }}
-            onMouseOver={e => e.currentTarget.style.opacity = '1'}
-            onMouseOut={e => e.currentTarget.style.opacity = isFocusMode ? '0.3' : '0.8'}
-            title={isFocusMode ? t('pixelator.exitFocusMode') : t('pixelator.enterFocusMode')}
-          >
-            {isFocusMode ? '⤡' : '⤢'}
-          </button>
-        )}
-
         {viewState.zoom > 1.01 && currentRow == null && (
           <button 
             onClick={handleCrop}
             style={{
               position: 'absolute',
-              top: onSetFocus ? 60 : 16,
+              top: 16,
               right: 16,
               zIndex: 100,
               background: 'var(--accent)',
