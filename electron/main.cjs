@@ -8,10 +8,12 @@ const isDev = process.env.NODE_ENV === 'development';
 const dataDir = path.join(app.getPath('userData'), 'pixel-it-data');
 const imagesDir = path.join(dataDir, 'images');
 const dbPath = path.join(dataDir, 'projects.json');
+const settingsPath = path.join(dataDir, 'settings.json');
 
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
 if (!fs.existsSync(dbPath)) fs.writeFileSync(dbPath, JSON.stringify({ projects: [] }));
+if (!fs.existsSync(settingsPath)) fs.writeFileSync(settingsPath, JSON.stringify({}));
 
 protocol.registerSchemesAsPrivileged([
   { scheme: 'pixelit', privileges: { standard: true, secure: true, supportFetchAPI: true, bypassCSP: true, corsEnabled: true } }
@@ -93,6 +95,15 @@ ipcMain.handle('delete-project', (event, projectId) => {
   data.projects = data.projects.filter(p => p.id !== projectId);
   fs.writeFileSync(dbPath, JSON.stringify(data));
   return data.projects;
+});
+
+ipcMain.handle('get-settings', () => {
+  return JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+});
+
+ipcMain.handle('save-settings', (event, settings) => {
+  fs.writeFileSync(settingsPath, JSON.stringify(settings));
+  return true;
 });
 
 ipcMain.handle('save-image', (event, { base64Data, filename }) => {

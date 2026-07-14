@@ -8,6 +8,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveImage: (data) => ipcRenderer.invoke('save-image', data),
   showOpenDialog: (options) => ipcRenderer.invoke('show-open-dialog', options),
   savePdf: (data) => ipcRenderer.invoke('save-pdf', data),
+  getSettings: () => ipcRenderer.invoke('get-settings'),
+  saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
   closeApp: () => ipcRenderer.send('close-app'),
   minimizeApp: () => ipcRenderer.send('minimize-app'),
 });

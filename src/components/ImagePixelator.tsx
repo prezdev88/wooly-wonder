@@ -1186,7 +1186,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
               onSetFocus?.(true);
             }}
             style={{ 
-              background: 'var(--accent)', color: 'var(--bg-color)', border: 'none', 
+              background: 'var(--accent)', color: 'var(--accent-text)', border: 'none', 
               padding: '14px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
               transition: 'all 0.2s',

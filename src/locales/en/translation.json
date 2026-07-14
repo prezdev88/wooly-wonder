@@ -1,10 +1,8 @@
 {
   "themes": {
-    "purple": "Royal Purple",
-    "orange": "Terracotta",
-    "green": "Forest",
-    "blue": "Ocean",
-    "pink": "Bubblegum"
+    "lightBlue": "Light Mode",
+    "sepiaTheme": "Sepia",
+    "draculaTheme": "Dracula Night"
   },
   "app": {
     "title": "Wooly Wonder 🧶",
@@ -13,7 +11,7 @@
     "minimize": "Minimize",
     "close": "Close",
     "appTheme": "APP THEME",
-    "customColor": "Custom Color",
+    "customTheme": "Custom Theme",
     "language": "LANGUAGE",
     "spanish": "Spanish",
     "english": "English"

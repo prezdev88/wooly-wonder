@@ -7,17 +7,26 @@ import localforage from 'localforage'
 import './index.css'
 
 const THEMES = [
-  { id: 'purple', nameKey: 'purple', accent: '#9D4EDD', hover: '#C77DFF' },
-  { id: 'orange', nameKey: 'orange', accent: '#E07A5F', hover: '#F4A261' },
-  { id: 'green', nameKey: 'green', accent: '#2A9D8F', hover: '#45B8AA' },
-  { id: 'blue', nameKey: 'blue', accent: '#3A86FF', hover: '#6BA2FF' },
-  { id: 'pink', nameKey: 'pink', accent: '#FF006E', hover: '#FF4D99' },
+  { id: 'dracula', nameKey: 'draculaTheme', bg: '#282A36', panel: '#44475A', border: 'rgba(255, 255, 255, 0.1)', textMain: '#F8F8F2', textMuted: '#6272A4', accent: '#FF79C6', hover: '#FF92DF' },
+  { id: 'light-blue', nameKey: 'lightBlue', bg: '#F8F9FA', panel: '#FFFFFF', border: 'rgba(0, 0, 0, 0.08)', textMain: '#212529', textMuted: '#6C757D', accent: '#3A86FF', hover: '#6BA2FF' },
+  { id: 'sepia', nameKey: 'sepiaTheme', bg: '#F4E1D2', panel: '#E8D5C4', border: 'rgba(0, 0, 0, 0.05)', textMain: '#5E4A3D', textMuted: '#8A7A6E', accent: '#E07A5F', hover: '#F4A261' },
 ];
 
 function App() {
   const { t, i18n } = useTranslation();
-  const [themeId, setThemeId] = useState(localStorage.getItem('themeId') || 'purple');
-  const [customColor, setCustomColor] = useState(localStorage.getItem('customThemeColor') || '#FF0055');
+  const [themeId, setThemeId] = useState(localStorage.getItem('themeId') || 'dracula');
+  const [customTheme, setCustomTheme] = useState(() => {
+    const saved = localStorage.getItem('customTheme');
+    return saved ? JSON.parse(saved) : {
+      bg: '#1A1816',
+      panel: '#2a2724',
+      border: 'rgba(255, 255, 255, 0.08)',
+      textMain: '#F4F1DE',
+      textMuted: '#A8A497',
+      accent: '#FF0055',
+      hover: '#FF4D99'
+    };
+  });
   const [showSettings, setShowSettings] = useState(false);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -30,6 +39,23 @@ function App() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        if (window.electronAPI && window.electronAPI.getSettings) {
+          const settings = await window.electronAPI.getSettings();
+          if (settings.themeId) setThemeId(settings.themeId);
+          if (settings.customTheme) setCustomTheme(settings.customTheme);
+        } else {
+          const settings = (await localforage.getItem<any>('settings')) || {};
+          if (settings.themeId) setThemeId(settings.themeId);
+          if (settings.customTheme) setCustomTheme(settings.customTheme);
+        }
+      } catch (e) {
+        console.error("Error loading settings", e);
+      }
+    };
+    fetchSettings();
+
     const fetchProjects = async () => {
       if (window.electronAPI) {
         const projs = await window.electronAPI.getProjects();
@@ -69,22 +95,44 @@ function App() {
   };
 
   useEffect(() => {
-    let accent, hover;
+    let theme;
     if (themeId === 'custom') {
-      accent = customColor;
-      hover = customColor; // Para simplificar, el hover es el mismo color (o podríamos aclararlo)
+      theme = customTheme;
     } else {
-      const theme = THEMES.find(t => t.id === themeId) || THEMES[0];
-      accent = theme.accent;
-      hover = theme.hover;
+      theme = THEMES.find(t => t.id === themeId) || THEMES[0];
     }
-    document.documentElement.style.setProperty('--accent', accent);
-    document.documentElement.style.setProperty('--accent-hover', hover);
+    document.documentElement.style.setProperty('--bg-color', theme.bg);
+    document.documentElement.style.setProperty('--panel-bg', theme.panel);
+    document.documentElement.style.setProperty('--panel-border', theme.border);
+    document.documentElement.style.setProperty('--text-main', theme.textMain);
+    document.documentElement.style.setProperty('--text-muted', theme.textMuted);
+    document.documentElement.style.setProperty('--accent', theme.accent);
+    document.documentElement.style.setProperty('--accent-hover', theme.hover);
+
+    const getContrastYIQ = (hexcolor: string) => {
+      if (!hexcolor || hexcolor.startsWith('rgb')) return '#FFFFFF';
+      hexcolor = hexcolor.replace("#", "");
+      if (hexcolor.length === 3) hexcolor = hexcolor.split('').map(c => c + c).join('');
+      const r = parseInt(hexcolor.substring(0,2),16);
+      const g = parseInt(hexcolor.substring(2,4),16);
+      const b = parseInt(hexcolor.substring(4,6),16);
+      const yiq = ((r*299)+(g*587)+(b*114))/1000;
+      return (yiq >= 128) ? '#1A1A1A' : '#FFFFFF';
+    };
+    document.documentElement.style.setProperty('--accent-text', getContrastYIQ(theme.accent));
+
     localStorage.setItem('themeId', themeId);
     if (themeId === 'custom') {
-      localStorage.setItem('customThemeColor', customColor);
+      localStorage.setItem('customTheme', JSON.stringify(customTheme));
     }
-  }, [themeId, customColor]);
+
+    const settingsToSave = { themeId, customTheme };
+    if (window.electronAPI && window.electronAPI.saveSettings) {
+      window.electronAPI.saveSettings(settingsToSave).catch(e => console.error("Error saving settings", e));
+    } else {
+      localforage.setItem('settings', settingsToSave).catch(e => console.error("Error saving settings", e));
+    }
+  }, [themeId, customTheme]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -423,36 +471,40 @@ function App() {
                       background: themeId === 'custom' ? 'rgba(255,255,255,0.1)' : 'transparent',
                       border: '1px solid',
                       borderColor: themeId === 'custom' ? 'var(--accent)' : 'var(--panel-border)',
-                      padding: '8px 12px',
+                      padding: '12px',
                       borderRadius: '8px',
                       display: 'flex',
-                      alignItems: 'center',
+                      flexDirection: 'column',
                       gap: '12px',
                       cursor: 'pointer',
                       transition: 'var(--transition)'
                     }}
                   >
-                    <input 
-                      type="color" 
-                      value={themeId === 'custom' ? customColor : '#ffffff'}
-                      onChange={(e) => {
-                        setCustomColor(e.target.value);
-                        setThemeId('custom');
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      style={{ 
-                        width: '24px', 
-                        height: '24px', 
-                        padding: 0, 
-                        border: 'none', 
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        background: 'none'
-                      }}
-                    />
-                    <span style={{ fontSize: '1rem', color: themeId === 'custom' ? 'var(--accent)' : 'var(--text-main)', fontWeight: themeId === 'custom' ? 600 : 400, flex: 1 }}>
-                      {t('app.customColor')}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '1rem', color: themeId === 'custom' ? 'var(--accent)' : 'var(--text-main)', fontWeight: themeId === 'custom' ? 600 : 400, flex: 1 }}>
+                        {t('app.customTheme')}
+                      </span>
+                    </div>
+                    {themeId === 'custom' && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }} onClick={e => e.stopPropagation()}>
+                        {Object.entries({
+                          bg: 'Background',
+                          panel: 'Panels',
+                          textMain: 'Text',
+                          accent: 'Accent'
+                        }).map(([key, label]) => (
+                          <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <input 
+                              type="color" 
+                              value={customTheme[key as keyof typeof customTheme]}
+                              onChange={(e) => setCustomTheme(prev => ({ ...prev, [key]: e.target.value, ...(key === 'accent' ? { hover: e.target.value } : {}) }))}
+                              style={{ width: '28px', height: '28px', padding: 0, border: 'none', borderRadius: '4px', cursor: 'pointer', background: 'none' }}
+                            />
+                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
               </div>
               <h4 style={{ margin: '16px 0', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 500, letterSpacing: '0.5px' }}>{t('app.language')}</h4>
