@@ -1716,6 +1716,15 @@ input:focus-visible {
     overflow: visible;
   }
 
+  .pixelator-sidebar .resolution-control {
+    order: -1;
+    margin-top: 0 !important;
+    margin-bottom: 18px;
+    padding: 4px 0 18px !important;
+    border-top: 0 !important;
+    border-bottom: 1px solid var(--panel-border);
+  }
+
   body:has(.main-content.focus-mode),
   #root:has(.main-content.focus-mode) {
     width: 100%;

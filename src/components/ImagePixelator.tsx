@@ -948,7 +948,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
       
       {!isFocusMode && (
         <aside className="pixelator-sidebar">
-        <div style={{ 
+        <div style={{
           padding: '16px', 
           background: 'var(--panel-bg)', 
           border: '1px solid var(--panel-border)',
@@ -1073,7 +1073,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
         )}
 
         {/* Nivel de detalle (Slider) */}
-        <div style={{ 
+        <div className="resolution-control" style={{
           marginTop: '16px', 
           paddingTop: '20px', 
           borderTop: '1px solid var(--panel-border)',
