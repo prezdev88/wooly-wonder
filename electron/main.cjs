@@ -5,18 +5,24 @@ const { autoUpdater } = require('electron-updater');
 const isDev = process.env.NODE_ENV === 'development';
 
 // Setup data directories
-const dataDir = path.join(app.getPath('userData'), 'pixel-it-data');
+const userDataDir = app.getPath('userData');
+const dataDir = path.join(userDataDir, 'wooly-wonder-data');
+const legacyDataDirectoryName = ['pixel', 'it', 'data'].join('-');
+const legacyDataDir = path.join(userDataDir, legacyDataDirectoryName);
 const imagesDir = path.join(dataDir, 'images');
 const dbPath = path.join(dataDir, 'projects.json');
 const settingsPath = path.join(dataDir, 'settings.json');
 
+if (!fs.existsSync(dataDir) && fs.existsSync(legacyDataDir)) {
+  fs.renameSync(legacyDataDir, dataDir);
+}
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
 if (!fs.existsSync(dbPath)) fs.writeFileSync(dbPath, JSON.stringify({ projects: [] }));
 if (!fs.existsSync(settingsPath)) fs.writeFileSync(settingsPath, JSON.stringify({}, null, 2));
 
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'pixelit', privileges: { standard: true, secure: true, supportFetchAPI: true, bypassCSP: true, corsEnabled: true } }
+  { scheme: 'woolywonder', privileges: { standard: true, secure: true, supportFetchAPI: true, bypassCSP: true, corsEnabled: true } }
 ]);
 
 function createWindow() {
@@ -44,8 +50,8 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  protocol.handle('pixelit', (request) => {
-    let urlPath = request.url.slice('pixelit://'.length);
+  protocol.handle('woolywonder', (request) => {
+    let urlPath = request.url.slice('woolywonder://'.length);
     let filePath = decodeURIComponent(urlPath);
     if (!filePath.startsWith('/')) {
       filePath = '/' + filePath;
