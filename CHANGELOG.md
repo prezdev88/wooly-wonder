@@ -2,6 +2,47 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.4.0](https://github.com/prezdev88/wooly-wonder/compare/v1.3.0...v1.4.0) (2026-07-17)
+
+
+### Features
+
+* add completed segments tracking and update functionality in ImagePixelator ([51b3d3c](https://github.com/prezdev88/wooly-wonder/commit/51b3d3ca19d52c9384ebb5d26ff1f784743de4f8))
+* add confirmation dialogs for project and image deletion actions ([5d69615](https://github.com/prezdev88/wooly-wonder/commit/5d69615ecf3d2945799e207f74c91c01b0ea6717))
+* add current row color display panel to ImagePixelator with responsive styling ([656c455](https://github.com/prezdev88/wooly-wonder/commit/656c4559792709dc427d0e138515ce6182496d71))
+* add deploy script for automated Docker setup ([dba591e](https://github.com/prezdev88/wooly-wonder/commit/dba591ed777f44176e85be2df0e5db5ca4151d96))
+* add image cropping functionality to ImagePixelator and update translations ([9a7e753](https://github.com/prezdev88/wooly-wonder/commit/9a7e753f3f9cbebefb6c4fc7949fb5ec36ad5b26))
+* add mobile FAB menu for pixelator actions and update styles ([c43d219](https://github.com/prezdev88/wooly-wonder/commit/c43d21963ff1605a02b7b94683e8bb7a034c3973))
+* add motion settings for enhanced user experience and customization ([d1bfbba](https://github.com/prezdev88/wooly-wonder/commit/d1bfbba6724967d8eefca6ba1d2e0ae2398aa29d))
+* add pixel size locking functionality to ImagePixelator and update project image type ([6239797](https://github.com/prezdev88/wooly-wonder/commit/6239797432223898bd7466cda33d123c3bbcae54))
+* add responsive adjustments for web and mobile layouts ([7f21d10](https://github.com/prezdev88/wooly-wonder/commit/7f21d109b1b8c3521e30b94b9a732f08e990c572))
+* add run script to start the application ([f1d0968](https://github.com/prezdev88/wooly-wonder/commit/f1d0968748e346bd20ad298ad9a92bad13e2ae85))
+* add script to run Docker with build option ([1a98a81](https://github.com/prezdev88/wooly-wonder/commit/1a98a812f52997c6dcbf7a4328b669513c3e4a16))
+* add settings management with theme customization and persistence ([ab2fb54](https://github.com/prezdev88/wooly-wonder/commit/ab2fb54c4e09f3d1c5aef2355fd42ca86cefa335))
+* add touch zoom functionality to row colors panel in ImagePixelator ([f37e0d6](https://github.com/prezdev88/wooly-wonder/commit/f37e0d6bde9f11ea427ffd44aed169915bbf4814))
+* enhance mobile FAB menu with toggle functionality and improved styling ([29db022](https://github.com/prezdev88/wooly-wonder/commit/29db02246afd57dcf27b0f9096a87411b17945c4))
+* enhance project list layout with responsive styles and improved item interactions ([8e34e4b](https://github.com/prezdev88/wooly-wonder/commit/8e34e4bcb8054d3ee3643dc8021183ac688c39d7))
+* enhance settings management with language selection and settings file access ([aac06d3](https://github.com/prezdev88/wooly-wonder/commit/aac06d3ed17ba2fce32a2409303173372ad9bf10))
+* enhance touch interactions and improve responsive layout for mobile devices ([d9863ac](https://github.com/prezdev88/wooly-wonder/commit/d9863ac2be9121e63ad6196035e01d1eb8e0dc55))
+* implement Docker setup with Nginx and localforage for project storage ([4d21513](https://github.com/prezdev88/wooly-wonder/commit/4d215131ee87931121d536f6a50b9f062cfb9277))
+* implement mobile FAB menu for project creation and update styles ([b394afa](https://github.com/prezdev88/wooly-wonder/commit/b394afa4777ec09528c2760d64d4f82101457155))
+* implement responsive focus mode styles and resize observer for canvas ([11d9c90](https://github.com/prezdev88/wooly-wonder/commit/11d9c903861231ab5a7c9b41ff464a0baca30675))
+* implement settings dialog for theme and language customization ([8902175](https://github.com/prezdev88/wooly-wonder/commit/8902175af832820bc1925f68f413ca14654d0c88))
+* integrate auto-updater and expose app version via IPC ([617f979](https://github.com/prezdev88/wooly-wonder/commit/617f97974acbdc57fa34bea1cd782bfb70717696))
+* refactor back button and update styles for pixelator actions ([10f2537](https://github.com/prezdev88/wooly-wonder/commit/10f25375aba869a0e705de982ad7cf54a7957d3c))
+* refactor FAB menu for improved accessibility and styling ([eca028b](https://github.com/prezdev88/wooly-wonder/commit/eca028b379ca8890377c2d4c1fd078ad9bf4640e))
+* remove focus mode button and related translations ([d3438ea](https://github.com/prezdev88/wooly-wonder/commit/d3438eaafd613f740249df8eae15ae2c19c3b0c1))
+* update port mapping for wooly-wonder-web service in docker-compose ([2034ec7](https://github.com/prezdev88/wooly-wonder/commit/2034ec7b573177d48b145409f5c934a7ec9380ba))
+
+
+### Bug Fixes
+
+* adjust overflow properties for improved layout responsiveness ([1dd244f](https://github.com/prezdev88/wooly-wonder/commit/1dd244fb25b7a02072b43bf99dc882abb9ac928a))
+* enhance pixelator sidebar layout with resolution control adjustments ([4425880](https://github.com/prezdev88/wooly-wonder/commit/44258806a95cffe0df7ffa5501d7db1a61ce6027))
+* remove version specification from docker-compose and add completedSegments to ProjectImage interface ([1fabc74](https://github.com/prezdev88/wooly-wonder/commit/1fabc7430c04aa0faa45ac1ab162edd70a99ec9b))
+* update data directory structure and rename project to wooly-wonder ([4b416a1](https://github.com/prezdev88/wooly-wonder/commit/4b416a1f3052db41218749b8cd8af3e0fa877cfe))
+* update translation for upload image in English and Spanish ([e95d2e3](https://github.com/prezdev88/wooly-wonder/commit/e95d2e3152e9e66d8fed46493a3388ec0fe4e4fb))
+
 ## [1.3.0](https://github.com/prezdev88/wooly-wonder/compare/v1.2.0...v1.3.0) (2026-07-12)
 
 
