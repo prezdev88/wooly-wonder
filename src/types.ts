@@ -8,6 +8,7 @@ export interface ProjectImage {
   currentRow?: number | null;
   markedPixel?: { x: number, y: number } | null;
   completedSegments?: Record<number, number[]>;
+  customPixels?: Record<string, {r: number, g: number, b: number, hex: string}>;
 }
 
 export interface SavedColor {

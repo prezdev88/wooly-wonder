@@ -26,9 +26,11 @@ interface Props {
   onUpdateImageUrl?: (newUrl: string) => void;
   completedSegments?: Record<number, number[]>;
   onUpdateCompletedSegments?: (segments: Record<number, number[]>) => void;
+  customPixels?: Record<string, {r: number, g: number, b: number, hex: string}>;
+  onUpdateCustomPixels?: (pixels: Record<string, {r: number, g: number, b: number, hex: string}>) => void;
 }
 
-export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, isPixelSizeLocked = false, onUpdatePixelSizeLocked, currentRow = null, onUpdateCurrentRow, markedPixel = null, onUpdateMarkedPixel, isFocusMode = false, onSetFocus, projectName = 'Proyecto sin título', onCreateProject, onUpdateImageUrl, completedSegments = {}, onUpdateCompletedSegments }: Props) {
+export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, initialPixelSize = 50, onUpdatePixelSize, isPixelSizeLocked = false, onUpdatePixelSizeLocked, currentRow = null, onUpdateCurrentRow, markedPixel = null, onUpdateMarkedPixel, isFocusMode = false, onSetFocus, projectName = 'Proyecto sin título', onCreateProject, onUpdateImageUrl, completedSegments = {}, onUpdateCompletedSegments, customPixels, onUpdateCustomPixels }: Props) {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -44,6 +46,13 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
   const [showFabMenu, setShowFabMenu] = useState(false);
   const [showCropConfirmation, setShowCropConfirmation] = useState(false);
   const [showKnitDirectionDialog, setShowKnitDirectionDialog] = useState(false);
+  const [activeTool, setActiveTool] = useState<'none' | 'brush' | 'eyedropper'>('none');
+  const [brushColor, setBrushColor] = useState<{hex: string; r: number; g: number; b: number} | null>(null);
+  const customPixelsRef = useRef<Record<string, {r: number; g: number; b: number; hex: string}>>({});
+  const isPaintingRef = useRef(false);
+  const paintHistoryRef = useRef<Array<Record<string, {r: number; g: number; b: number; hex: string}>>>([]);
+  const redoHistoryRef = useRef<Array<Record<string, {r: number; g: number; b: number; hex: string}>>>([]);
+  const [forceRedraw, setForceRedraw] = useState(0);
   
   
   const [hoverColor, setHoverColor] = useState<{ hex: string; r: number; g: number; b: number } | null>(null);
@@ -76,6 +85,15 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
   }, [imageUrl]);
 
   useEffect(() => {
+    if (customPixels) {
+      customPixelsRef.current = { ...customPixels };
+    } else {
+      customPixelsRef.current = {};
+    }
+    setForceRedraw(prev => prev + 1);
+  }, [customPixels]);
+
+  useEffect(() => {
     setSelectedSegmentIdx(null);
   }, [currentRow]);
 
@@ -90,7 +108,45 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
         completedSegments
       );
     }
-  }, [originalImage, pixelSize, currentRow, markedPixel, selectedSegmentIdx, completedSegments]);
+  }, [originalImage, pixelSize, currentRow, markedPixel, selectedSegmentIdx, completedSegments, forceRedraw]);
+
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        if (e.shiftKey) {
+          // Redo
+          if (redoHistoryRef.current.length > 0) {
+            e.preventDefault();
+            const nextState = redoHistoryRef.current.pop();
+            if (nextState) {
+              paintHistoryRef.current.push({ ...customPixelsRef.current });
+              customPixelsRef.current = nextState;
+              setForceRedraw(prev => prev + 1);
+              if (onUpdateCustomPixels) {
+                onUpdateCustomPixels({ ...nextState });
+              }
+            }
+          }
+        } else {
+          // Undo
+          if (paintHistoryRef.current.length > 0) {
+            e.preventDefault();
+            const previousState = paintHistoryRef.current.pop();
+            if (previousState) {
+              redoHistoryRef.current.push({ ...customPixelsRef.current });
+              customPixelsRef.current = previousState;
+              setForceRedraw(prev => prev + 1);
+              if (onUpdateCustomPixels) {
+                onUpdateCustomPixels({ ...previousState });
+              }
+            }
+          }
+        }
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
 
   useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -194,6 +250,20 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
          rectWidth,
          rectHeight
        };
+       
+       Object.entries(customPixelsRef.current).forEach(([key, color]) => {
+         const [xStr, yStr] = key.split(',');
+         const px = parseInt(xStr, 10);
+         const py = parseInt(yStr, 10);
+         if (px >= 0 && px < pointsWide && py >= 0 && py < pointsHigh) {
+           const idx = (py * pointsWide + px) * 4;
+           imgData.data[idx] = color.r;
+           imgData.data[idx + 1] = color.g;
+           imgData.data[idx + 2] = color.b;
+           imgData.data[idx + 3] = 255;
+         }
+       });
+       offCtx.putImageData(imgData, 0, 0);
        
        // Draw it back scaled up to the main canvas
        ctx.imageSmoothingEnabled = false;
@@ -383,14 +453,52 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newSize = parseInt(e.target.value, 10);
     setPixelSize(newSize);
+    customPixelsRef.current = {};
+    paintHistoryRef.current = [];
+    redoHistoryRef.current = [];
     if (originalImage) {
       drawPixelated(originalImage, newSize, currentRow ?? null, markedPixel ?? null);
     }
   };
 
-  const handleSliderRelease = () => {
+  const handleSliderRelease = (e: React.PointerEvent<HTMLInputElement> | React.MouseEvent<HTMLInputElement> | React.TouchEvent<HTMLInputElement>) => {
+    const newSize = parseInt((e.currentTarget as HTMLInputElement).value, 10);
     if (onUpdatePixelSize) {
-        onUpdatePixelSize(pixelSize);
+        onUpdatePixelSize(newSize);
+    }
+    if (onUpdateCustomPixels) {
+      onUpdateCustomPixels({});
+    }
+  };
+
+  const paintAtEvent = (e: React.MouseEvent) => {
+    if (!pixelDataRef.current || !canvasRef.current || !brushColor || currentRow != null) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const scaleX = canvasRef.current.width / rect.width;
+    const scaleY = canvasRef.current.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+    
+    const gridX = Math.floor(x / pixelDataRef.current.rectWidth);
+    const gridY = Math.floor(y / pixelDataRef.current.rectHeight);
+    const key = `${gridX},${gridY}`;
+    
+    const currentColor = customPixelsRef.current[key];
+    if (!currentColor || currentColor.hex !== brushColor.hex) {
+      customPixelsRef.current[key] = { r: brushColor.r, g: brushColor.g, b: brushColor.b, hex: brushColor.hex };
+      if (originalImage) {
+        drawPixelated(originalImage, pixelSize, currentRow ?? null, markedPixel ?? null, selectedSegmentIdx, completedSegments);
+      }
+    }
+  };
+
+  // We save to project/history only on mouse up
+  const handleMouseUpPainting = () => {
+    if (isPaintingRef.current) {
+      isPaintingRef.current = false;
+      if (onUpdateCustomPixels) {
+        onUpdateCustomPixels({ ...customPixelsRef.current });
+      }
     }
   };
 
@@ -422,11 +530,16 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
       const b = data[idx + 2];
       const hex = '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
       setHoverColor({ hex, r, g, b });
+      
+      if (isPaintingRef.current && activeTool === 'brush') {
+        paintAtEvent(e);
+      }
     }
   };
   
   const handleMouseLeave = () => {
     setHoverColor(null);
+    isPaintingRef.current = false;
   }
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -575,6 +688,15 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
     }
     
     if (hoverColor) {
+      if (activeTool === 'eyedropper') {
+        setBrushColor(hoverColor);
+        setActiveTool('brush');
+        return;
+      }
+      if (activeTool === 'brush') {
+        return; // Painting is handled by mousedown/mousemove
+      }
+      
       if (!palette.find(c => c.hex === hoverColor.hex)) {
         onUpdatePalette([...palette, { id: Date.now().toString(), ...hoverColor }]);
       }
@@ -917,7 +1039,9 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          onMouseDown={(e) => { if (e.button === 1) e.preventDefault(); }}
+          onMouseDown={(e) => {
+            if (e.button === 1) e.preventDefault();
+          }}
           style={{ 
             cursor: isPanning ? 'grabbing' : 'auto',
             overflow: 'hidden',
@@ -927,11 +1051,25 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
         >
           <canvas 
             ref={canvasRef} 
+            onMouseDown={(e) => {
+              if (e.button === 1) {
+                e.preventDefault();
+              } else if (e.button === 0 && activeTool === 'brush' && brushColor) {
+                paintHistoryRef.current.push({ ...customPixelsRef.current });
+                redoHistoryRef.current = [];
+                isPaintingRef.current = true;
+                paintAtEvent(e);
+              }
+            }}
+            onMouseUp={handleMouseUpPainting}
             onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
+            onMouseLeave={(e) => {
+              handleMouseUpPainting();
+              handleMouseLeave();
+            }}
             onClick={handleCanvasClick}
             style={{ 
-              cursor: isPanning ? 'grabbing' : 'crosshair',
+              cursor: isPanning ? 'grabbing' : (activeTool === 'eyedropper' ? 'crosshair' : (activeTool === 'brush' ? 'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'24\' height=\'24\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08\'/><path d=\'M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z\'/></svg>") 0 24, crosshair' : 'crosshair')),
               position: 'absolute',
               left: '50%',
               top: '50%',
@@ -989,6 +1127,63 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
             <div>B: {hoverColor ? hoverColor.b : '--'}</div>
           </div>
         </div>
+
+        {/* Tools Section */}
+        <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+          <button
+            onClick={() => setActiveTool(activeTool === 'eyedropper' ? 'none' : 'eyedropper')}
+            style={{
+              flex: 1, padding: '10px', borderRadius: '8px', border: 'none',
+              background: activeTool === 'eyedropper' ? 'var(--accent)' : 'var(--panel-bg)',
+              color: activeTool === 'eyedropper' ? '#fff' : 'var(--text-main)',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              border: activeTool === 'eyedropper' ? '1px solid var(--accent)' : '1px solid var(--panel-border)'
+            }}
+            title={t('pixelator.eyedropper', 'Gotero')}
+          >
+            <span>💧</span> {t('pixelator.eyedropper', 'Gotero')}
+          </button>
+          <button
+            onClick={() => {
+              setActiveTool(activeTool === 'brush' ? 'none' : 'brush');
+              if (activeTool !== 'brush' && !brushColor) {
+                setBrushColor({ hex: '#000000', r: 0, g: 0, b: 0 });
+              }
+            }}
+            style={{
+              flex: 1, padding: '10px', borderRadius: '8px', border: 'none',
+              background: activeTool === 'brush' ? 'var(--accent)' : 'var(--panel-bg)',
+              color: activeTool === 'brush' ? '#fff' : 'var(--text-main)',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              border: activeTool === 'brush' ? '1px solid var(--accent)' : '1px solid var(--panel-border)'
+            }}
+            title={t('pixelator.brush', 'Brocha')}
+          >
+            <span>🖌️</span> {t('pixelator.brush', 'Brocha')}
+          </button>
+        </div>
+        
+        {brushColor && activeTool === 'brush' && (
+          <div style={{ marginTop: '10px', fontSize: '0.9rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>Color actual de la brocha:</span>
+            <input 
+              type="color" 
+              value={brushColor.hex}
+              onChange={(e) => {
+                const hex = e.target.value;
+                const r = parseInt(hex.slice(1, 3), 16) || 0;
+                const g = parseInt(hex.slice(3, 5), 16) || 0;
+                const b = parseInt(hex.slice(5, 7), 16) || 0;
+                setBrushColor({ hex, r, g, b });
+              }}
+              style={{ 
+                width: '32px', height: '32px', padding: 0, border: 'none', 
+                borderRadius: '4px', cursor: 'pointer', background: 'transparent' 
+              }} 
+              title="Cambiar color de la brocha"
+            />
+          </div>
+        )}
         
         {/* Right Sidebar for Saved Colors */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', marginTop: '24px' }}>

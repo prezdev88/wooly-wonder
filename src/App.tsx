@@ -321,105 +321,35 @@ function App() {
     await saveProjectData(updatedProject);
   };
 
-  const handleUpdatePalette = async (newPalette: SavedColor[]) => {
-    if (!activeProject || !activeImage) return;
-    
-    const updatedImage = { ...activeImage, palette: newPalette };
-    const updatedProject = { 
-      ...activeProject, 
-      images: activeProject.images.map(img => img.id === activeImage.id ? updatedImage : img) 
-    };
-    
-    setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
-    setActiveImage(updatedImage);
-    
-    await saveProjectData(updatedProject);
+  const updateActiveImageState = (updates: Partial<ProjectImage>) => {
+    setActiveImage(prev => {
+      if (!prev || !activeProjectId) return prev;
+      const updatedImage = { ...prev, ...updates };
+      
+      setProjects(prevProjects => {
+        const proj = prevProjects.find(p => p.id === activeProjectId);
+        if (!proj) return prevProjects;
+        const updatedProject = {
+          ...proj,
+          images: proj.images.map(img => img.id === updatedImage.id ? updatedImage : img)
+        };
+        
+        saveProjectData(updatedProject).catch(console.error);
+        return prevProjects.map(p => p.id === activeProjectId ? updatedProject : p);
+      });
+      
+      return updatedImage;
+    });
   };
 
-  const handleUpdateImageUrl = async (newUrl: string) => {
-    if (!activeProject || !activeImage) return;
-    
-    const updatedImage = { ...activeImage, url: newUrl };
-    const updatedProject = { 
-      ...activeProject, 
-      images: activeProject.images.map(img => img.id === activeImage.id ? updatedImage : img) 
-    };
-    
-    setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
-    setActiveImage(updatedImage);
-    
-    await saveProjectData(updatedProject);
-  };
-
-  const handleUpdateCompletedSegments = async (segments: Record<number, number[]>) => {
-    if (!activeProject || !activeImage) return;
-    const updatedImage = { ...activeImage, completedSegments: segments };
-    const updatedProject = {
-      ...activeProject,
-      images: activeProject.images.map(img => img.id === activeImage.id ? updatedImage : img)
-    };
-    const updatedProjects = await saveProjectData(updatedProject);
-    setProjects(updatedProjects);
-    setActiveImage(updatedImage);
-  };
-
-  const handleUpdatePixelSize = async (newPixelSize: number) => {
-    if (!activeProject || !activeImage) return;
-    
-    const updatedImage = { ...activeImage, pixelSize: newPixelSize };
-    const updatedProject = { 
-      ...activeProject, 
-      images: activeProject.images.map(img => img.id === activeImage.id ? updatedImage : img) 
-    };
-    
-    setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
-    setActiveImage(updatedImage);
-    
-    await saveProjectData(updatedProject);
-  };
-
-  const handleUpdatePixelSizeLocked = async (isLocked: boolean) => {
-    if (!activeProject || !activeImage) return;
-    
-    const updatedImage = { ...activeImage, isPixelSizeLocked: isLocked };
-    const updatedProject = { 
-      ...activeProject, 
-      images: activeProject.images.map(img => img.id === activeImage.id ? updatedImage : img) 
-    };
-    
-    setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
-    setActiveImage(updatedImage);
-    
-    await saveProjectData(updatedProject);
-  };
-
-  const handleUpdateCurrentRow = (row: number | null) => {
-    if (!activeProject || !activeImage) return;
-    
-    const updatedImage = { ...activeImage, currentRow: row };
-    const updatedImages = activeProject.images.map(img => 
-      img.id === activeImage.id ? updatedImage : img
-    );
-    const updatedProject = { ...activeProject, images: updatedImages };
-    
-    setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
-    saveProjectData(updatedProject);
-    setActiveImage(updatedImage);
-  };
-
-  const handleUpdateMarkedPixel = async (pixel: { x: number, y: number } | null) => {
-    if (!activeProject || !activeImage) return;
-    
-    const updatedImage = { ...activeImage, markedPixel: pixel };
-    const updatedImages = activeProject.images.map(img => 
-      img.id === activeImage.id ? updatedImage : img
-    );
-    const updatedProject = { ...activeProject, images: updatedImages };
-    
-    setProjects(projects.map(p => p.id === activeProject.id ? updatedProject : p));
-    await saveProjectData(updatedProject);
-    setActiveImage(updatedImage);
-  };
+  const handleUpdatePalette = (newPalette: SavedColor[]) => updateActiveImageState({ palette: newPalette });
+  const handleUpdateImageUrl = (newUrl: string) => updateActiveImageState({ url: newUrl });
+  const handleUpdateCompletedSegments = (segments: Record<number, number[]>) => updateActiveImageState({ completedSegments: segments });
+  const handleUpdatePixelSize = (newPixelSize: number) => updateActiveImageState({ pixelSize: newPixelSize });
+  const handleUpdatePixelSizeLocked = (isLocked: boolean) => updateActiveImageState({ isPixelSizeLocked: isLocked });
+  const handleUpdateCurrentRow = (row: number | null) => updateActiveImageState({ currentRow: row });
+  const handleUpdateMarkedPixel = (pixel: { x: number, y: number } | null) => updateActiveImageState({ markedPixel: pixel });
+  const handleUpdateCustomPixels = (customPixels: Record<string, {r: number, g: number, b: number, hex: string}>) => updateActiveImageState({ customPixels });
 
   return (
     <>
@@ -546,6 +476,8 @@ function App() {
                 onUpdateMarkedPixel={handleUpdateMarkedPixel}
                 completedSegments={activeImage.completedSegments}
                 onUpdateCompletedSegments={handleUpdateCompletedSegments}
+                customPixels={activeImage.customPixels}
+                onUpdateCustomPixels={handleUpdateCustomPixels}
                 isFocusMode={isFocusMode}
                 onSetFocus={setIsFocusMode}
                 projectName={activeProject.name || t('project.untitledProject')}
