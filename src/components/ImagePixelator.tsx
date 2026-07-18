@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { jsPDF } from 'jspdf';
 import { useTranslation } from 'react-i18next';
 import ConfirmDialog from './ConfirmDialog';
+import KnitDirectionDialog from './KnitDirectionDialog';
 
 import type { SavedColor } from '../types';
 
@@ -42,6 +43,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
   const touchStartRef = useRef<{ dist: number, zoom: number, x: number, y: number, panX: number, panY: number } | null>(null);
   const [showFabMenu, setShowFabMenu] = useState(false);
   const [showCropConfirmation, setShowCropConfirmation] = useState(false);
+  const [showKnitDirectionDialog, setShowKnitDirectionDialog] = useState(false);
   
   
   const [hoverColor, setHoverColor] = useState<{ hex: string; r: number; g: number; b: number } | null>(null);
@@ -1155,10 +1157,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
           </button>
           
           <button 
-            onClick={() => {
-              onUpdateCurrentRow?.(0);
-              onSetFocus?.(true);
-            }}
+            onClick={() => setShowKnitDirectionDialog(true)}
             style={{ 
               background: 'var(--accent)', color: 'var(--accent-text)', border: 'none', 
               padding: '14px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold',
@@ -1192,7 +1191,7 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
                <button className="fab-pill" onClick={() => { exportToPDF(); setShowFabMenu(false); }} title={t('pixelator.exportPdf')}>
                  <span className="fab-pill-text">{t('pixelator.exportPdf')}</span>
                </button>
-               <button className="fab-pill" onClick={() => { onUpdateCurrentRow?.(0); onSetFocus?.(true); setShowFabMenu(false); }} title={t('pixelator.knit')}>
+               <button className="fab-pill" onClick={() => { setShowKnitDirectionDialog(true); setShowFabMenu(false); }} title={t('pixelator.knit')}>
                  <span className="fab-pill-text">{t('pixelator.knit')}</span>
                </button>
              </div>
@@ -1247,6 +1246,17 @@ export default function ImagePixelator({ imageUrl, palette, onUpdatePalette, ini
           onConfirm={cropImage}
           title={t('pixelator.cropTitle')}
           tone="warning"
+        />
+      )}
+
+      {showKnitDirectionDialog && (
+        <KnitDirectionDialog
+          onCancel={() => setShowKnitDirectionDialog(false)}
+          onSelectDirection={(direction) => {
+            setShowKnitDirectionDialog(false);
+            onUpdateCurrentRow?.(direction === 'top' ? 0 : imageDims.height - 1);
+            onSetFocus?.(true);
+          }}
         />
       )}
     </div>
