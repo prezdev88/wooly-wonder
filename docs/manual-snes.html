@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wooly Wonder — Manual de Instrucciones</title>
+<style>
+  /* ---- Fuentes (para PDF 100% offline conviene incrustar los .woff2; ver nota final) ---- */
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  :root {
+    --paper: #F5EEDC;
+    --paper-edge: #EBE0C6;
+    --ink: #2B2440;
+    --ink-soft: #5B5170;
+    --accent: #9D4EDD;
+    --accent-dark: #6B2FA0;
+    --pink: #FF79C6;
+    --page-w: 148mm;
+    --page-h: 210mm;
+    --title-font: 'Press Start 2P', monospace;
+    --body-font: Georgia, 'Times New Roman', serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: #4a4458;
+    font-family: var(--body-font);
+    color: var(--ink);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ---------- PÁGINA A5 ---------- */
+  .page {
+    position: relative;
+    width: var(--page-w);
+    height: var(--page-h);
+    margin: 24px auto;
+    background: var(--paper);
+    background-image: radial-gradient(var(--paper-edge) 1px, transparent 1px);
+    background-size: 6px 6px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.45);
+    overflow: hidden;
+    padding: 12mm 11mm;
+    display: flex;
+    flex-direction: column;
+  }
+  .page::before {
+    content: ""; position: absolute; inset: 6mm;
+    border: 3px solid var(--accent); border-radius: 4px; pointer-events: none;
+  }
+  .page::after {
+    content: ""; position: absolute; inset: 7.2mm;
+    border: 1px solid var(--accent); opacity: .5; border-radius: 3px; pointer-events: none;
+  }
+  .inner { position: relative; z-index: 2; flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+  /* ---------- PORTADA ---------- */
+  .cover { text-align: center; align-items: center; justify-content: space-between; }
+  .cover-top { width: 100%; margin-top: 4mm; }
+  .kicker { font-family: var(--title-font); font-size: 8px; letter-spacing: 2px; color: var(--accent-dark); margin-bottom: 10mm; }
+  .cover-logo {
+    width: 46mm; height: 46mm; margin: 0 auto 8mm; border-radius: 12px; background: var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 0 0 4px var(--accent), 0 6px 0 var(--accent-dark);
+  }
+  .cover-logo span { font-size: 60px; }
+  .cover-title { font-family: var(--title-font); font-size: 22px; line-height: 1.5; color: var(--accent); text-shadow: 3px 3px 0 var(--ink); margin: 0 0 6mm; }
+  .cover-sub { font-family: var(--title-font); font-size: 9px; letter-spacing: 1px; color: var(--ink); background: var(--pink); display: inline-block; padding: 4mm 6mm; border-radius: 4px; box-shadow: 3px 3px 0 var(--ink); }
+  .cover-bottom { width: 100%; margin-bottom: 4mm; }
+  .cover-version { font-family: var(--title-font); font-size: 8px; color: var(--ink-soft); }
+  .cover-note { font-size: 12px; color: var(--ink-soft); margin-top: 5mm; font-style: italic; }
+
+  /* ---------- ENCABEZADO DE SECCIÓN ---------- */
+  .sec-head { display: flex; align-items: center; gap: 5mm; margin-bottom: 6mm; }
+  .sec-num { font-family: var(--title-font); font-size: 15px; color: var(--paper); background: var(--accent); padding: 4mm; border-radius: 6px; box-shadow: 3px 3px 0 var(--accent-dark); min-width: 15mm; text-align: center; }
+  .sec-title { font-family: var(--title-font); font-size: 12.5px; color: var(--accent-dark); line-height: 1.45; margin: 0; }
+
+  /* ---------- CUERPO ---------- */
+  .sec-body { font-size: 12.5px; line-height: 1.65; }
+  .sec-body p { margin: 0 0 3.5mm; }
+  .sec-body strong { color: var(--accent-dark); }
+  .subhead { font-family: var(--title-font); font-size: 9px; color: var(--ink); margin: 5mm 0 3mm; }
+
+  .steps, .bullets { padding: 0; margin: 0 0 4mm; }
+  .steps { list-style: none; counter-reset: s; }
+  .steps li { position: relative; padding: 1.5mm 0 1.5mm 9mm; counter-increment: s; font-size: 12px; }
+  .steps li::before { content: counter(s); position: absolute; left: 0; top: 1mm; font-family: var(--title-font); font-size: 8px; color: var(--paper); background: var(--ink); width: 6.5mm; height: 6.5mm; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+  .bullets { list-style: none; }
+  .bullets li { position: relative; padding: 1mm 0 1mm 6mm; font-size: 12px; }
+  .bullets li::before { content: "▸"; position: absolute; left: 0; color: var(--accent); font-weight: bold; }
+
+  /* ---------- CAPTURAS ---------- */
+  .shot { border: 3px solid var(--ink); border-radius: 6px; overflow: hidden; margin: 4mm 0; box-shadow: 4px 4px 0 rgba(157,78,221,.25); background: #10121a; }
+  .shot img { width: 100%; display: block; }
+  .shot.tall img { max-height: 95mm; width: auto; margin: 0 auto; }
+  .cap { text-align: center; font-size: 10px; color: var(--ink-soft); font-style: italic; margin: -1mm 0 4mm; }
+
+  /* ---------- CALLOUT ---------- */
+  .callout { border-left: 5px solid var(--pink); background: #fff7ea; border-radius: 4px; padding: 3.5mm 5mm; font-size: 11.5px; line-height: 1.55; margin-top: 4mm; box-shadow: 2px 2px 0 rgba(157,78,221,.15); }
+  .callout .tag { font-family: var(--title-font); font-size: 8px; color: var(--accent-dark); display: block; margin-bottom: 2mm; }
+  .callout.warn { border-left-color: #E0794F; }
+  .callout.warn .tag { color: #B5502A; }
+
+  /* ---------- ÍNDICE ---------- */
+  .toc { list-style: none; padding: 0; margin: 2mm 0 0; column-count: 1; }
+  .toc li { display: flex; align-items: baseline; gap: 3mm; padding: 2.2mm 0; border-bottom: 1px dotted var(--paper-edge); font-size: 12.5px; }
+  .toc .n { font-family: var(--title-font); font-size: 9px; color: var(--accent); min-width: 9mm; }
+  .toc .t { flex: 1; }
+
+  /* ---------- TABLA / ATAJOS ---------- */
+  table.keys { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 2mm; }
+  table.keys td { padding: 2.2mm 2mm; border-bottom: 1px solid var(--paper-edge); vertical-align: middle; }
+  table.keys td:last-child { text-align: right; white-space: nowrap; }
+  .keycap { font-family: var(--title-font); font-size: 8px; background: var(--ink); color: var(--paper); padding: 1.5mm 2mm; border-radius: 3px; box-shadow: 0 2px 0 var(--accent-dark); display: inline-block; }
+
+  /* ---------- PIE ---------- */
+  .foot { margin-top: auto; padding-top: 4mm; display: flex; justify-content: space-between; align-items: center; font-family: var(--title-font); font-size: 7px; color: var(--ink-soft); border-top: 2px solid var(--paper-edge); }
+
+  /* ---------- IMPRESIÓN ---------- */
+  @page { size: A5 portrait; margin: 0; }
+  @media print {
+    body { background: #fff; }
+    .page { margin: 0; box-shadow: none; page-break-after: always; }
+    .page:last-child { page-break-after: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ 1 · PORTADA ============ -->
+<section class="page cover">
+  <div class="inner cover">
+    <div class="cover-top">
+      <div class="kicker">TEJE  ·  BORDA  ·  CREA</div>
+      <div class="cover-logo"><span>🧶</span></div>
+      <h1 class="cover-title">WOOLY<br>WONDER</h1>
+      <div class="cover-sub">MANUAL DE INSTRUCCIONES</div>
+    </div>
+    <div class="cover-bottom">
+      <p class="cover-note">De la fotografía al patrón, punto a punto.</p>
+      <div class="cover-version">VER. 1.4.0</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2 · ÍNDICE ============ -->
+<section class="page">
+  <div class="inner">
+    <div class="sec-head"><div class="sec-num">★</div><h2 class="sec-title">Índice</h2></div>
+    <ul class="toc">
+      <li><span class="n">01</span><span class="t">Primeros pasos</span></li>
+      <li><span class="n">02</span><span class="t">Proyectos: crear, abrir y eliminar</span></li>
+      <li><span class="n">03</span><span class="t">Agregar imágenes</span></li>
+      <li><span class="n">04</span><span class="t">El editor de patrones</span></li>
+      <li><span class="n">05</span><span class="t">Nivel de detalle (Resolución)</span></li>
+      <li><span class="n">06</span><span class="t">Zoom y desplazamiento</span></li>
+      <li><span class="n">07</span><span class="t">Recortar la imagen</span></li>
+      <li><span class="n">08</span><span class="t">Crear tu paleta de colores</span></li>
+      <li><span class="n">09</span><span class="t">Herramientas: Gotero y Brocha</span></li>
+      <li><span class="n">10</span><span class="t">Modo Tejer</span></li>
+      <li><span class="n">11</span><span class="t">Exportar a PDF</span></li>
+      <li><span class="n">12</span><span class="t">Preferencias</span></li>
+      <li><span class="n">13</span><span class="t">Guardado automático</span></li>
+      <li><span class="n">14</span><span class="t">Atajos de teclado y ratón</span></li>
+      <li><span class="n">15</span><span class="t">Preguntas frecuentes</span></li>
+    </ul>
+    <div class="callout"><span class="tag">▸ EN POCAS PALABRAS</span>Wooly Wonder convierte cualquier imagen en un patrón cuadriculado listo para tejer, bordar o hacer punto de cruz. Cada cuadrito es un punto de tu labor.</div>
+    <div class="foot"><span>WOOLY WONDER</span><span>· 2 ·</span></div>
+  </div>
+</section>
+
+<!-- ============ §1 PRIMEROS PASOS ============ -->
+<section class="page">
+  <div class="inner">
+    <div class="sec-head"><div class="sec-num">01</div><h2 class="sec-title">Primeros pasos</h2></div>
+    <div class="sec-body">
+      <p>Al abrir Wooly Wonder verás tres zonas principales:</p>
+      <ul class="bullets">
+        <li><strong>Barra lateral izquierda:</strong> tus proyectos y el botón <strong>+ Nuevo Proyecto</strong>.</li>
+        <li><strong>Zona central:</strong> el área de trabajo con tu imagen.</li>
+        <li><strong>Cabecera:</strong> Ajustes (⚙), minimizar (—) y cerrar (✕).</li>
+      </ul>
+      <div class="shot"><img src="assets/manual/vista-general.png" alt="Vista general de la app"></div>
+      <p class="cap">Vista general: proyectos, editor central y paleta.</p>
+      <p>Si es tu primera vez, no habrá proyectos: crea uno para empezar.</p>
+    </div>
+    <div class="foot"><span>WOOLY WONDER</span><span>· 3 ·</span></div>
+  </div>
+</section>
+
+<!-- ============ §2 PROYECTOS ============ -->
+<section class="page">
+  <div class="inner">
+    <div class="sec-head"><div class="sec-num">02</div><h2 class="sec-title">Proyectos</h2></div>
+    <div class="sec-body">
+      <p>Un <strong>proyecto</strong> guarda una o varias imágenes con sus patrones, paletas y progreso.</p>
+      <div class="shot"><img src="assets/manual/proyectos.png" alt="Lista de proyectos y galería"></div>
+      <p class="cap">La barra lateral lista tus proyectos; la galería, sus imágenes.</p>
+      <ul class="bullets">
+        <li><strong>Crear:</strong> pulsa <strong>+ Nuevo Proyecto</strong>.</li>
+        <li><strong>Renombrar:</strong> edita el nombre arriba de la galería; se guarda solo.</li>
+        <li><strong>Abrir:</strong> haz clic en su nombre.</li>
+        <li><strong>Eliminar:</strong> pulsa la <strong>×</strong>; se pide confirmación.</li>
+      </ul>
+    </div>
+    <div class="foot"><span>WOOLY WONDER</span><span>· 4 ·</span></div>
+  </div>
+</section>
+
+<!-- ============ §3 AGREGAR IMÁGENES ============ -->
+<section class="page">
+  <div class="inner">
+    <div class="sec-head"><div class="sec-num">03</div><h2 class="sec-title">Agregar imágenes</h2></div>
+    <div class="sec-body">
+      <p>Dentro de un proyecto puedes añadir imágenes de tres formas:</p>
+      <ol class="steps">
+        <li>Clic en el recuadro <strong>"Cargar imagen"</strong> y elige un archivo.</li>
+        <li><strong>Arrastra y suelta</strong> una imagen sobre ese recuadro.</li>
+        <li>Pega con <strong>Ctrl + V</strong> desde el portapapeles.</li>
+      </ol>
+      <p>Con <strong>Ctrl + V</strong>: si no hay proyectos, se crea uno; si tienes varios, la app pregunta dónde guardar.</p>
+      <div class="shot"><img src="assets/manual/pegar-imagen.png" alt="Diálogo dónde guardar la imagen pegada"></div>
+      <p class="cap">Con varios proyectos, eliges dónde guardar la imagen pegada.</p>
+    </div>
+    <div class="foot"><span>WOOLY WONDER</span><span>· 5 ·</span></div>
+  </div>
+</section>
+
+<!-- ============ §4 EDITOR ============ -->
+<section class="page">
+  <div class="inner">
+    <div class="sec-head"><div class="sec-num">04</div><h2 class="sec-title">El editor</h2></div>
+    <div class="sec-body">
+      <p>Al abrir una imagen entras en el editor. La foto se pixela en una cuadrícula donde <strong>cada cuadrito es un punto</strong> de tu tejido.</p>
+      <div class="shot"><img src="assets/manual/editor.png" alt="El editor con cuadrícula y paleta"></div>
+      <p class="cap">Lienzo a la izquierda; inspector de color y paleta a la derecha.</p>
+      <p>La cuadrícula es <strong>inteligente</strong>: sus líneas y números cambian de color para contrastar siempre con la foto, así nunca fuerzas la vista al contar.</p>
+    </div>
+    <div class="foot"><span>WOOLY WONDER</span><span>· 6 ·</span></div>
+  </div>
+</section>
+
+<!-- ============ §5 RESOLUCIÓN ============ -->
+<section class="page">
+  <div class="inner">
+    <div class="sec-head"><div class="sec-num">05</div><h2 class="sec-title">Resolución</h2></div>
+    <div class="sec-body">
+      <p>El control <strong>Resolución</strong> decide cuántos cuadritos tendrá tu patrón:</p>
+      <ul class="bullets">
+        <li>Hacia <strong>Menos</strong>: patrón grande, rápido y fácil.</li>
+        <li>Hacia <strong>Más</strong>: más detalle y realismo, pero más puntos.</li>
+      </ul>
+      <div class="shot"><img src="assets/manual/resolucion-candado.png" alt="Control de resolución con candado"></div>
+      <p class="cap">Slider, dimensiones (ej. 30 x 29 pts) y candado 🔓/🔒.</p>
+      <p>Pulsa el <strong>candado 🔒</strong> para bloquear la resolución y no cambiarla por accidente.</p>
+      <div class="callout warn"><span class="tag">▸ OJO</span>Cambiar la resolución <strong>reinicia</strong> los píxeles pintados a mano con la Brocha, porque la cuadrícula se recalcula. Ajusta primero, pinta después.</div>
+    </div>
+    <div class="foot"><span>WOOLY WONDER</span><span>· 7 ·</span></div>
+  </div>
+</section>
+
+<!-- ============ §6 NAVEGACIÓN + §7 RECORTAR ============ -->
+<section class="page">
+  <div class="inner">
+    <div class="sec-head"><div class="sec-num">06</div><h2 class="sec-title">Zoom y mover</h2></div>
+    <div class="sec-body">
+      <ul class="bullets">
+        <li><strong>Zoom:</strong> gira la rueda del ratón sobre la imagen.</li>
+        <li><strong>Desplazar:</strong> mantén presionada la rueda (botón central) y arrastra.</li>
+        <li><strong>Táctil:</strong> pellizca con dos dedos para el zoom.</li>
+      </ul>
+
+      <div class="sec-head" style="margin-top:6mm;"><div class="sec-num">07</div><h2 class="sec-title">Recortar</h2></div>
+      <p>Al hacer <strong>zoom</strong>, aparece el botón <strong>✂️ Recortar</strong> arriba a la derecha del lienzo. La imagen se reemplaza por el área visible.</p>
+      <div class="shot"><img src="assets/manual/recortar.png" alt="Botón recortar al hacer zoom"></div>
+      <p class="cap">El botón ✂️ Recortar aparece al ampliar la imagen.</p>
+      <div class="callout warn"><span class="tag">▸ OJO</span>El recorte <strong>no se puede deshacer</strong>. La app pide confirmación antes de aplicarlo.</div>
+    </div>
+    <div class="foot"><span>WOOLY WONDER</span><span>· 8 ·</span></div>
+  </div>
+</section>
+
+<!-- ============ §8 PALETA ============ -->
+<section class="page">
+  <div class="inner">
+    <div class="sec-head"><div class="sec-num">08</div><h2 class="sec-title">Tu paleta</h2></div>
+    <div class="sec-body">
+      <p>La <strong>paleta</strong> es tu lista de colores de lana o hilo a comprar.</p>
+      <ol class="steps">
+        <li><strong>Pasa el ratón</strong> por la imagen: el <strong>Color Inspeccionado</strong> muestra el HEX y los valores R, G, B.</li>
+        <li>Haz <strong>clic izquierdo</strong> en un cuadrito para guardar su color en <strong>Mi Paleta</strong>.</li>
+        <li><strong>Ponle nombre</strong> a cada color (ej. "Lana Roja", "Algodón Cielo").</li>
+        <li>Borra un color con la <strong>✕</strong> junto a él.</li>
+      </ol>
+      <div class="callout"><span class="tag">▸ CONSEJO</span>El contador junto a "Mi Paleta" te dice cuántos colores llevas. Nombrar bien tus colores hace el patrón mucho más fácil de seguir.</div>
+    </div>
+    <div class="foot"><span>WOOLY WONDER</span><span>· 9 ·</span></div>
+  </div>
+</section>
+
+<!-- ============ §9 HERRAMIENTAS ============ -->
+<section class="page">
+  <div class="inner">
+    <div class="sec-head"><div class="sec-num">09</div><h2 class="sec-title">Gotero y Brocha</h2></div>
+    <div class="sec-body">
+      <p>Dos herramientas para <strong>editar el patrón a mano</strong>:</p>
+      <div class="shot"><img src="assets/manual/herramientas.png" alt="Herramientas Gotero y Brocha"></div>
+      <p class="cap">Gotero, Brocha y el selector de color de la brocha.</p>
+      <p><strong>💧 Gotero:</strong> haz clic en un cuadrito para copiar su color a la brocha.</p>
+      <p><strong>🖌️ Brocha:</strong> pinta cuadritos con el color elegido. Clic (o arrastra) para pintar.</p>
+      <ul class="bullets">
+        <li>Deshacer: <strong>Ctrl + Z</strong> · Rehacer: <strong>Ctrl + Shift + Z</strong></li>
+      </ul>
+    </div>
+    <div class="foot"><span>WOOLY WONDER</span><span>· 10 ·</span></div>
+  </div>
+</section>
+
+<!-- ============ §10 MODO TEJER (1) ============ -->
+<section class="page">
+  <div class="inner">
+    <div class="sec-head"><div class="sec-num">10</div><h2 class="sec-title">Modo Tejer ▶</h2></div>
+    <div class="sec-body">
+      <p>La herramienta estrella para <strong>seguir tu patrón fila por fila</strong>. Pulsa <strong>▶ Tejer!</strong> y elige desde dónde empezar:</p>
+      <div class="shot"><img src="assets/manual/direccion-tejido.png" alt="Diálogo dirección de tejido"></div>
+      <p class="cap">Empieza por <strong>Arriba</strong> o por <strong>Abajo</strong> del patrón.</p>
+      <p>Al elegir, entras en <strong>Modo Concentración</strong>: se ocultan los menús y solo se resalta la fila actual. Sal con <strong>⏹ Salir</strong> o la tecla <strong>Esc</strong>.</p>
+    </div>
+    <div class="foot"><span>WOOLY WONDER</span><span>· 11 ·</span></div>
+  </div>
+</section>
+
+<!-- ============ §10 MODO TEJER (2) ============ -->
+<section class="page">
+  <div class="inner">
+    <div class="sec-head"><div class="sec-num">10</div><h2 class="sec-title">Modo Tejer ▶</h2></div>
+    <div class="sec-body">
+      <div class="shot"><img src="assets/manual/modo-tejer.png" alt="Modo Tejer con fila resaltada"></div>
+      <p class="cap">Fila actual resaltada, resto atenuado y columnas numeradas.</p>
+      <p class="subhead">PANEL "COLORES DE LA FILA"</p>
+      <p>Muestra la secuencia de la fila (ej. <strong>12x Lana Roja</strong> = teje 12 puntos rojos seguidos).</p>
+      <ul class="bullets">
+        <li><strong>Un clic</strong> en un tramo lo resalta en verde.</li>
+        <li><strong>Doble clic</strong> lo marca como completado.</li>
+        <li><strong>Clic en un cuadrito</strong> coloca un punto rojo donde te quedaste.</li>
+      </ul>
+      <div class="callout"><span class="tag">▸ SE GUARDA SOLO</span>Fila actual, tramos completados y punto marcado siguen ahí cuando vuelvas a abrir la app.</div>
+    </div>
+    <div class="foot"><span>WOOLY WONDER</span><span>· 12 ·</span></div>
+  </div>
+</section>
+
+<!-- ============ §11 PDF ============ -->
+<section class="page">
+  <div class="inner">
+    <div class="sec-head"><div class="sec-num">11</div><h2 class="sec-title">Exportar a PDF</h2></div>
+    <div class="sec-body">
+      <p>Pulsa <strong>🖨️ Exportar a PDF</strong> para generar un documento imprimible de dos páginas:</p>
+      <ul class="bullets">
+        <li><strong>Página 1:</strong> el patrón con el nombre del proyecto.</li>
+        <li><strong>Página 2:</strong> la lista de colores de la paleta.</li>
+      </ul>
+      <div class="shot tall"><img src="assets/manual/pdf.png" alt="PDF exportado con patrón y paleta"></div>
+      <p class="cap">El PDF incluye patrón y, en otra página, la paleta.</p>
+    </div>
+    <div class="foot"><span>WOOLY WONDER</span><span>· 13 ·</span></div>
+  </div>
+</section>
+
+<!-- ============ §12 PREFERENCIAS ============ -->
+<section class="page">
+  <div class="inner">
+    <div class="sec-head"><div class="sec-num">12</div><h2 class="sec-title">Preferencias</h2></div>
+    <div class="sec-body">
+      <p>Abre <strong>Ajustes (⚙)</strong> en la cabecera.</p>
+      <div class="shot"><img src="assets/manual/ajustes-temas.png" alt="Ajustes: selección de tema"></div>
+      <p class="cap">Elige tema: Noche Drácula, Modo Claro, Sepia o personalizado.</p>
+      <ul class="bullets">
+        <li><strong>Tema:</strong> apariencia de la app, o crea tu combinación de colores.</li>
+        <li><strong>Movimiento:</strong> Completo, Sutil o Desactivado.</li>
+        <li><strong>Idioma:</strong> Español o Inglés.</li>
+        <li><strong>Archivo de ajustes:</strong> todo se guarda en un <strong>settings.json</strong> que puedes compartir.</li>
+      </ul>
+    </div>
+    <div class="foot"><span>WOOLY WONDER</span><span>· 14 ·</span></div>
+  </div>
+</section>
+
+<!-- ============ §13 + §14 ============ -->
+<section class="page">
+  <div class="inner">
+    <div class="sec-head"><div class="sec-num">13</div><h2 class="sec-title">Guardado auto.</h2></div>
+    <div class="sec-body">
+      <p>Wooly Wonder <strong>guarda todo automáticamente</strong>: proyectos, imágenes, paletas, nombres, nivel de detalle, píxeles pintados y tu progreso del Modo Tejer. No hay botón "Guardar".</p>
+
+      <div class="sec-head" style="margin-top:6mm;"><div class="sec-num">14</div><h2 class="sec-title">Atajos</h2></div>
+      <table class="keys">
+        <tr><td>Pegar una imagen</td><td><span class="keycap">Ctrl+V</span></td></tr>
+        <tr><td>Deshacer (Brocha)</td><td><span class="keycap">Ctrl+Z</span></td></tr>
+        <tr><td>Rehacer (Brocha)</td><td><span class="keycap">Ctrl+Shift+Z</span></td></tr>
+        <tr><td>Salir del Modo Tejer</td><td><span class="keycap">Esc</span></td></tr>
+        <tr><td>Zoom sobre la imagen</td><td>Rueda ratón</td></tr>
+        <tr><td>Mover la imagen</td><td>Rueda + arrastrar</td></tr>
+        <tr><td>Guardar un color</td><td>Clic izquierdo</td></tr>
+      </table>
+    </div>
+    <div class="foot"><span>WOOLY WONDER</span><span>· 15 ·</span></div>
+  </div>
+</section>
+
+<!-- ============ §15 FAQ ============ -->
+<section class="page">
+  <div class="inner">
+    <div class="sec-head"><div class="sec-num">15</div><h2 class="sec-title">Preguntas frecuentes</h2></div>
+    <div class="sec-body">
+      <p class="subhead">¿SE BORRAN MIS PROYECTOS AL CERRAR?</p>
+      <p>No. Todo se guarda automáticamente y estará intacto la próxima vez.</p>
+      <p class="subhead">NO VEO BIEN LA CUADRÍCULA EN FOTOS OSCURAS</p>
+      <p>La cuadrícula y los números ajustan su color solos para contrastar siempre.</p>
+      <p class="subhead">PINTÉ Y AL MOVER LA RESOLUCIÓN SE BORRÓ</p>
+      <p>Es normal: la cuadrícula se recalcula. Fija la resolución (candado 🔒) y pinta después.</p>
+      <p class="subhead">¿VARIAS IMÁGENES EN UN PROYECTO?</p>
+      <p>Sí, cada una guarda su propio patrón, paleta y progreso.</p>
+      <div class="callout"><span class="tag">▸ ✿</span>Hecho con mucho amor para la comunidad tejedora.</div>
+    </div>
+    <div class="foot"><span>WOOLY WONDER</span><span>· 16 ·</span></div>
+  </div>
+</section>
+
+</body>
+</html>
